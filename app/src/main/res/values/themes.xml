@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.MeituanPosLite" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/meituan_yellow</item>
+        <item name="colorSecondary">#333333</item>
+        <item name="android:statusBarColor">#FFD100</item>
+    </style>
+</resources>

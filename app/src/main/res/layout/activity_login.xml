@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:background="#2C344B"
+    android:padding="32dp">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="美团收银 (青春版)"
+            android:textColor="#FFD100"
+            android:textSize="32sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="纯本地单机版 | 员工交班登录"
+            android:textColor="#CCCCCC"
+            android:textSize="18sp"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="360dp"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:background="#FFFFFF"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="请输入员工登录 PIN 码"
+            android:textColor="#333333"
+            android:textSize="18sp"/>
+
+        <TextView
+            android:id="@+id/tvPinDisplay"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="12dp"
+            android:background="#F0F0F0"
+            android:gravity="center"
+            android:textSize="28sp"
+            android:textColor="#000000"
+            android:letterSpacing="0.2"/>
+
+        <GridLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:columnCount="3">
+
+            <Button android:id="@+id/btn1" text="1" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="75dp" android:layout_height="60dp" android:textSize="22sp"/>
+            <Button android:id="@+id/btn2" text="2" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="75dp" android:layout_height="60dp" android:textSize="22sp"/>
+            <Button android:id="@+id/btn3" text="3" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="75dp" android:layout_height="60dp" android:textSize="22sp"/>
+
+            <Button android:id="@+id/btn4" text="4" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="75dp" android:layout_height="60dp" android:textSize="22sp"/>
+            <Button android:id="@+id/btn5" text="5" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="75dp" android:layout_height="60dp" android:textSize="22sp"/>
+            <Button android:id="@+id/btn6" text="6" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="75dp" android:layout_height="60dp" android:textSize="22sp"/>
+
+            <Button android:id="@+id/btn7" text="7" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="75dp" android:layout_height="60dp" android:textSize="22sp"/>
+            <Button android:id="@+id/btn8" text="8" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="75dp" android:layout_height="60dp" android:textSize="22sp"/>
+            <Button android:id="@+id/btn9" text="9" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="75dp" android:layout_height="60dp" android:textSize="22sp"/>
+
+            <Button android:id="@+id/btnClear" text="C" android:textColor="#FF3B30" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="75dp" android:layout_height="60dp" android:textSize="20sp"/>
+            <Button android:id="@+id/btn0" text="0" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="75dp" android:layout_height="60dp" android:textSize="22sp"/>
+            <Button android:id="@+id/btnDelete" text="←" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="75dp" android:layout_height="60dp" android:textSize="20sp"/>
+        </GridLayout>
+
+        <Button
+            android:id="@+id/btnLogin"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="16dp"
+            android:text="进入系统"
+            android:textSize="18sp"
+            android:backgroundTint="#FFD100"
+            android:textColor="#222222"/>
+    </LinearLayout>
+</LinearLayout>

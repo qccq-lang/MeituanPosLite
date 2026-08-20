@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="380dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="选择收银支付方式"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:gravity="center"/>
+
+    <TextView
+        android:id="@+id/tvDialogAmount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="16dp"
+        android:text="应收: ￥0.00"
+        android:textColor="#FF3B30"
+        android:textSize="20sp"
+        android:gravity="center"/>
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2">
+
+        <Button
+            android:id="@+id/btnPayCash"
+            android:layout_width="160dp"
+            android:layout_height="60dp"
+            android:layout_margin="4dp"
+            android:text="现金支付"
+            android:backgroundTint="#4CAF50"/>
+
+        <Button
+            android:id="@+id/btnPayWechat"
+            android:layout_width="160dp"
+            android:layout_height="60dp"
+            android:layout_margin="4dp"
+            android:text="微信记账"
+            android:backgroundTint="#07C160"/>
+
+        <Button
+            android:id="@+id/btnPayAlipay"
+            android:layout_width="160dp"
+            android:layout_height="60dp"
+            android:layout_margin="4dp"
+            android:text="支付宝记账"
+            android:backgroundTint="#1677FF"/>
+
+        <Button
+            android:id="@+id/btnPayCard"
+            android:layout_width="160dp"
+            android:layout_height="60dp"
+            android:layout_margin="4dp"
+            android:text="银行卡/挂账"
+            android:backgroundTint="#607D8B"/>
+    </GridLayout>
+</LinearLayout>

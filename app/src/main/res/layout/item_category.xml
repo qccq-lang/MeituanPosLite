@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Button xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/btnCategory"
+    android:layout_width="wrap_content"
+    android:layout_height="42dp"
+    android:layout_marginEnd="8dp"
+    android:text="分类"
+    android:backgroundTint="#FFFFFF"
+    android:textColor="#333333"
+    style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
