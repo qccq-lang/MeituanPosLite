@@ -34,7 +34,6 @@ class MainActivity : AppCompatActivity() {
     private val cartList = mutableListOf<CartItemModel>()
     private var selectedCategoryId: Long = -1
 
-    // 当前操作的桌台 (null 为快餐模式)
     private var activeTable: DiningTable? = null
     private var activeOrderId: Long = 0
 
@@ -55,27 +54,21 @@ class MainActivity : AppCompatActivity() {
         val roleDesc = if (App.currentStaff?.role == "ADMIN") "店长" else "收银员"
         binding.tvCashierInfo.text = "员工: $staffName ($roleDesc)"
 
-        // 桌台大厅配置
         binding.rvTableGrid.layoutManager = GridLayoutManager(this, 4)
-
-        // 点餐购物车配置
         binding.rvCart.layoutManager = LinearLayoutManager(this)
         binding.rvCart.adapter = CartAdapter()
         binding.rvCategories.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.rvProducts.layoutManager = GridLayoutManager(this, 4)
 
-        // 模式切换
         binding.btnNavTables.setOnClickListener { showTableView() }
         binding.btnNavFastFood.setOnClickListener { openFastFoodOrder() }
         binding.btnBackToTables.setOnClickListener { showTableView() }
 
-        // 点餐操作
         binding.btnClearCart.setOnClickListener {
             cartList.clear()
             updateCartSummary()
         }
 
-        // 下单开台 / 加菜挂单
         binding.btnSaveTableOrder.setOnClickListener {
             if (activeTable == null) {
                 Toast.makeText(this, "快餐模式请直接点击【结账收款】", Toast.LENGTH_SHORT).show()
@@ -88,7 +81,6 @@ class MainActivity : AppCompatActivity() {
             saveTableOrderAndReturn()
         }
 
-        // 结账清台
         binding.btnPay.setOnClickListener {
             if (cartList.isEmpty()) {
                 Toast.makeText(this, "购物车为空，无法结账", Toast.LENGTH_SHORT).show()
@@ -106,7 +98,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 观察桌台状态
     private fun observeTables() {
         lifecycleScope.launch {
             App.instance.database.posDao().getAllTables().collectLatest { tables ->
@@ -125,7 +116,6 @@ class MainActivity : AppCompatActivity() {
         binding.btnNavFastFood.setBackgroundColor(Color.parseColor("#FFFFFF"))
     }
 
-    // 打开快餐模式
     private fun openFastFoodOrder() {
         activeTable = null
         activeOrderId = 0
@@ -137,11 +127,10 @@ class MainActivity : AppCompatActivity() {
         binding.layoutOrderScreen.visibility = View.VISIBLE
     }
 
-    // 点击桌台处理
     private fun onTableClicked(table: DiningTable) {
         activeTable = table
         when (table.status) {
-            "IDLE" -> { // 空闲开台
+            "IDLE" -> {
                 activeOrderId = 0
                 cartList.clear()
                 updateCartSummary()
@@ -151,10 +140,10 @@ class MainActivity : AppCompatActivity() {
                 binding.layoutTableOverview.visibility = View.GONE
                 binding.layoutOrderScreen.visibility = View.VISIBLE
             }
-            "OCCUPIED" -> { // 就餐中 -> 弹出操作菜单 (加菜/结账/清台)
+            "OCCUPIED" -> {
                 showOccupiedTableDialog(table)
             }
-            "RESERVED" -> { // 已预定 -> 询问是否开台或取消预定
+            "RESERVED" -> {
                 AlertDialog.Builder(this)
                     .setTitle("桌台: ${table.name} (已预定)")
                     .setItems(arrayOf("▶ 确认到店·开始点餐", "❌ 取消预定")) { _, which ->
@@ -178,13 +167,13 @@ class MainActivity : AppCompatActivity() {
             .setTitle("桌台: ${table.name} 【就餐中·已消费 ￥$total】")
             .setItems(arrayOf("➕ 查看账单 / 继续加菜", "💰 结账收款 (清台)", "🚫 撤销订单 (清空桌台)")) { _, which ->
                 when (which) {
-                    0 -> loadOccupiedTableOrder(table) // 加菜/查看
-                    1 -> { // 快速直接结账
+                    0 -> loadOccupiedTableOrder(table)
+                    1 -> {
                         loadOccupiedTableOrder(table) {
                             showPaymentDialog()
                         }
                     }
-                    2 -> { // 撤销清台
+                    2 -> {
                         lifecycleScope.launch(Dispatchers.IO) {
                             val dao = App.instance.database.posDao()
                             table.status = "IDLE"
@@ -197,7 +186,6 @@ class MainActivity : AppCompatActivity() {
             }.show()
     }
 
-    // 读取已点菜品
     private fun loadOccupiedTableOrder(table: DiningTable, onLoaded: (() -> Unit)? = null) {
         activeTable = table
         activeOrderId = table.currentOrderId
@@ -209,7 +197,8 @@ class MainActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 cartList.clear()
                 for (item in items) {
-                    val p = products.find { it.id == item.productId } ?: Product(item.productId, 0, item.productName, item.price)
+                    val p = products.find { prod: Product -> prod.id == item.productId }
+                        ?: Product(id = item.productId, categoryId = 0L, name = item.productName, price = item.price)
                     cartList.add(CartItemModel(p, item.quantity))
                 }
                 updateCartSummary()
@@ -223,7 +212,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 下单开台 / 挂单保存
     private fun saveTableOrderAndReturn() {
         val table = activeTable ?: return
         val totalAmount = cartList.sumOf { it.product.price * it.count }
@@ -232,7 +220,7 @@ class MainActivity : AppCompatActivity() {
             val dao = App.instance.database.posDao()
             var orderId = activeOrderId
 
-            if (orderId == 0L) { // 新建挂单
+            if (orderId == 0L) {
                 val orderNo = SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINA).format(Date()) + (100..999).random()
                 val order = Order(
                     orderNo = orderNo,
@@ -244,7 +232,7 @@ class MainActivity : AppCompatActivity() {
                     status = "UNPAID"
                 )
                 orderId = dao.insertOrder(order)
-            } else { // 更新挂单
+            } else {
                 val order = dao.getOrderById(orderId)
                 if (order != null) {
                     dao.updateOrder(order.copy(totalAmount = totalAmount))
@@ -252,13 +240,11 @@ class MainActivity : AppCompatActivity() {
                 dao.deleteOrderItemsByOrderId(orderId)
             }
 
-            // 保存菜品
             val items = cartList.map {
                 OrderItem(orderId = orderId, productId = it.product.id, productName = it.product.name, price = it.product.price, quantity = it.count)
             }
             dao.insertOrderItems(items)
 
-            // 更新桌台为就餐中
             table.status = "OCCUPIED"
             table.currentOrderId = orderId
             table.currentAmount = totalAmount
@@ -272,7 +258,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 结账清台
     private fun showPaymentDialog() {
         val totalAmount = cartList.sumOf { it.product.price * it.count }
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_payment, null)
@@ -320,7 +305,6 @@ class MainActivity : AppCompatActivity() {
             }
             dao.insertOrderItems(items)
 
-            // 如果是桌台，清空恢复为空闲
             if (table != null) {
                 table.status = "IDLE"
                 table.currentOrderId = 0
@@ -343,7 +327,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 菜品与分类
     private fun observeCategories() {
         lifecycleScope.launch {
             App.instance.database.posDao().getAllCategories().collectLatest { categories ->
@@ -384,7 +367,6 @@ class MainActivity : AppCompatActivity() {
         binding.tvTotalAmount.text = String.format("￥%.2f", totalAmount)
     }
 
-    // --- 适配器 ---
     inner class TableGridAdapter(private val list: List<DiningTable>) : RecyclerView.Adapter<TableGridAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val tvName: TextView = v.findViewById(R.id.tvTableName)
@@ -402,20 +384,20 @@ class MainActivity : AppCompatActivity() {
             holder.tvName.text = table.name
 
             when (table.status) {
-                "OCCUPIED" -> { // 就餐中 (橙色高亮，展示当前金额)
+                "OCCUPIED" -> {
                     holder.itemView.setBackgroundColor(Color.parseColor("#FFF3E0"))
                     holder.tvStatus.text = "● 就餐中 (${table.capacity}人)"
                     holder.tvStatus.setTextColor(Color.parseColor("#E65100"))
                     holder.tvAmount.visibility = View.VISIBLE
                     holder.tvAmount.text = String.format("￥%.2f", table.currentAmount)
                 }
-                "RESERVED" -> { // 预定 (蓝色)
+                "RESERVED" -> {
                     holder.itemView.setBackgroundColor(Color.parseColor("#E3F2FD"))
                     holder.tvStatus.text = "● 已预定"
                     holder.tvStatus.setTextColor(Color.parseColor("#1565C0"))
                     holder.tvAmount.visibility = View.GONE
                 }
-                else -> { // 空闲 (清新绿)
+                else -> {
                     holder.itemView.setBackgroundColor(Color.parseColor("#E8F5E9"))
                     holder.tvStatus.text = "● 空闲 (${table.capacity}人)"
                     holder.tvStatus.setTextColor(Color.parseColor("#2E7D32"))
@@ -425,7 +407,6 @@ class MainActivity : AppCompatActivity() {
 
             holder.itemView.setOnClickListener { onTableClicked(table) }
 
-            // 长按预定 / 取消预定
             holder.itemView.setOnLongClickListener {
                 if (table.status == "IDLE") {
                     AlertDialog.Builder(this@MainActivity)
