@@ -37,6 +37,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.floor
 
 class MainActivity : AppCompatActivity() {
 
@@ -49,11 +50,13 @@ class MainActivity : AppCompatActivity() {
 
     private var activeTable: DiningTable? = null
     private var activeOrderId: Long = 0
+    private var isReservingMode: Boolean = false // 是否正在为预定桌台提前点菜
 
-    // 整单打折状态
+    // 整单打折与独立抹零状态
     private var wholeDiscountRate = 1.0
     private var wholeDiscountDeduct = 0.0
     private var wholeDiscountNote = ""
+    private var isAutoMoling = false // 独立抹零勾选
 
     data class CartItemModel(
         val product: Product,
@@ -87,7 +90,6 @@ class MainActivity : AppCompatActivity() {
         val roleDesc = if (staff?.role == "ADMIN") "店长" else "收银员"
         binding.tvCashierInfo.text = "员工: $staffName ($roleDesc)"
 
-        // 权限隔离
         if (staff?.role == "ADMIN") {
             binding.btnManage.visibility = View.VISIBLE
             binding.btnReport.visibility = View.VISIBLE
@@ -106,6 +108,12 @@ class MainActivity : AppCompatActivity() {
         binding.btnNavFastFood.setOnClickListener { openFastFoodOrder() }
         binding.btnBackToTables.setOnClickListener { showTableView() }
         updateNavModeButtons(isTableMode = true)
+
+        // 独立自动抹零监听
+        binding.cbAutoMoling.setOnCheckedChangeListener { _, isChecked ->
+            isAutoMoling = isChecked
+            updateCartSummary()
+        }
 
         binding.etSearchDish.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -133,13 +141,14 @@ class MainActivity : AppCompatActivity() {
             showDiscountButtonGridDialog(isWholeOrder = true, targetItem = null)
         }
 
+        // 下单挂单 / 预定保存
         binding.btnSaveTableOrder.setOnClickListener {
             if (activeTable == null) {
                 Toast.makeText(this, "快餐模式请直接点击【结账收款】", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             if (cartList.isEmpty()) {
-                Toast.makeText(this, "请先添加菜品再下单", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "请先添加菜品再保存", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             saveTableOrderAndReturn()
@@ -179,6 +188,7 @@ class MainActivity : AppCompatActivity() {
     private fun showTableView() {
         activeTable = null
         activeOrderId = 0
+        isReservingMode = false
         cartList.clear()
         resetWholeDiscount()
         updateNavModeButtons(isTableMode = true)
@@ -189,6 +199,7 @@ class MainActivity : AppCompatActivity() {
     private fun openFastFoodOrder() {
         activeTable = null
         activeOrderId = 0
+        isReservingMode = false
         cartList.clear()
         resetWholeDiscount()
         updateCartSummary()
@@ -205,7 +216,6 @@ class MainActivity : AppCompatActivity() {
         wholeDiscountNote = ""
     }
 
-    // 纯按钮网格打折弹窗
     private fun showDiscountButtonGridDialog(isWholeOrder: Boolean, targetItem: CartItemModel?) {
         lifecycleScope.launch(Dispatchers.IO) {
             val dao = App.instance.database.posDao()
@@ -221,8 +231,7 @@ class MainActivity : AppCompatActivity() {
                     DiscountConfig(name = "75折", type = "RATE", value = 0.75),
                     DiscountConfig(name = "立减￥5", type = "DEDUCT", value = 5.0),
                     DiscountConfig(name = "立减￥10", type = "DEDUCT", value = 10.0),
-                    DiscountConfig(name = "立减￥20", type = "DEDUCT", value = 20.0),
-                    DiscountConfig(name = "自动抹零", type = "MOLING", value = 0.0)
+                    DiscountConfig(name = "立减￥20", type = "DEDUCT", value = 20.0)
                 )
             }
 
@@ -235,7 +244,7 @@ class MainActivity : AppCompatActivity() {
                 val title = if (isWholeOrder) "🏷 选择整单优惠打折" else "🏷 【${targetItem?.product?.name}】单品优惠"
                 val tvTip = TextView(this@MainActivity).apply {
                     text = "点击下方快捷按钮立即应用优惠折扣："
-                    textSize = 14f // 修正为 Float
+                    textSize = 14f
                     setTextColor(Color.parseColor("#4B5563"))
                 }
                 dialogView.addView(tvTip)
@@ -257,7 +266,7 @@ class MainActivity : AppCompatActivity() {
                 for (cfg in configs) {
                     val btn = Button(this@MainActivity).apply {
                         text = cfg.name
-                        textSize = 15f // 修正为 Float
+                        textSize = 15f
                         setTextColor(Color.parseColor("#1E2433"))
                         setBackgroundColor(Color.parseColor("#F3F4F6"))
                         layoutParams = GridLayout.LayoutParams().apply {
@@ -282,7 +291,7 @@ class MainActivity : AppCompatActivity() {
 
                 val btnCustom = Button(this@MainActivity).apply {
                     text = "✏ 自定义减免..."
-                    textSize = 13f // 修正为 Float
+                    textSize = 13f
                     setTextColor(Color.parseColor("#2563EB"))
                     setBackgroundColor(Color.parseColor("#EFF6FF"))
                     layoutParams = LinearLayout.LayoutParams(0, 100, 1f).apply { marginEnd = 8 }
@@ -294,7 +303,7 @@ class MainActivity : AppCompatActivity() {
 
                 val btnReset = Button(this@MainActivity).apply {
                     text = "🔄 恢复原价"
-                    textSize = 13f // 修正为 Float
+                    textSize = 13f
                     setTextColor(Color.parseColor("#EF4444"))
                     setBackgroundColor(Color.parseColor("#FEE2E2"))
                     layoutParams = LinearLayout.LayoutParams(0, 100, 1f)
@@ -362,14 +371,6 @@ class MainActivity : AppCompatActivity() {
                     wholeDiscountDeduct = cfg.value
                     wholeDiscountNote = cfg.name
                 }
-                "MOLING" -> {
-                    val rawSum = cartList.sumOf { it.subtotal }
-                    val intPart = rawSum.toInt().toDouble()
-                    val diff = rawSum - intPart
-                    wholeDiscountRate = 1.0
-                    wholeDiscountDeduct = diff
-                    wholeDiscountNote = "自动抹零"
-                }
             }
         } else {
             targetItem?.let {
@@ -383,13 +384,6 @@ class MainActivity : AppCompatActivity() {
                         it.discountRate = 1.0
                         it.deductAmount = cfg.value
                         it.discountNote = cfg.name
-                    }
-                    "MOLING" -> {
-                        val singleRaw = it.product.price
-                        val diff = singleRaw - singleRaw.toInt().toDouble()
-                        it.discountRate = 1.0
-                        it.deductAmount = diff
-                        it.discountNote = "抹零"
                     }
                 }
             }
@@ -405,22 +399,41 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // 1. 直接开台点餐
     private fun startOrderForTable(table: DiningTable) {
         activeTable = table
         activeOrderId = 0
+        isReservingMode = false
         cartList.clear()
         resetWholeDiscount()
         updateCartSummary()
         binding.tvOrderTableTitle.text = "桌台: ${table.name} (${table.area})"
         binding.btnSaveTableOrder.visibility = View.VISIBLE
-        binding.btnSaveTableOrder.text = "下单挂单"
+        binding.btnSaveTableOrder.text = "下单开台"
         binding.layoutTableOverview.visibility = View.GONE
         binding.layoutOrderScreen.visibility = View.VISIBLE
     }
 
-    private fun loadOccupiedTableOrder(table: DiningTable, onLoaded: (() -> Unit)? = null) {
+    // 2. 预定并提前点菜 (核心功能)
+    private fun startPreOrderForReservation(table: DiningTable) {
+        activeTable = table
+        activeOrderId = 0
+        isReservingMode = true
+        cartList.clear()
+        resetWholeDiscount()
+        updateCartSummary()
+        binding.tvOrderTableTitle.text = "【提前预定点菜】桌台: ${table.name}"
+        binding.btnSaveTableOrder.visibility = View.VISIBLE
+        binding.btnSaveTableOrder.text = "保存预定菜单"
+        binding.layoutTableOverview.visibility = View.GONE
+        binding.layoutOrderScreen.visibility = View.VISIBLE
+    }
+
+    // 读取就餐中或预定中的订单
+    private fun loadExistingTableOrder(table: DiningTable, isFromReservation: Boolean = false, onLoaded: (() -> Unit)? = null) {
         activeTable = table
         activeOrderId = table.currentOrderId
+        isReservingMode = isFromReservation
         lifecycleScope.launch(Dispatchers.IO) {
             val dao = App.instance.database.posDao()
             val items = dao.getOrderItems(table.currentOrderId)
@@ -436,9 +449,10 @@ class MainActivity : AppCompatActivity() {
                     cartList.add(CartItemModel(p, item.quantity, discountRate = discountRate, discountNote = item.discountNote))
                 }
                 updateCartSummary()
-                binding.tvOrderTableTitle.text = "桌台: ${table.name} (就餐中·已点${cartList.sumOf { it.count }}件)"
+                val statusText = if (isFromReservation) "预定预点·已选${cartList.sumOf { it.count }}件" else "就餐中·已点${cartList.sumOf { it.count }}件"
+                binding.tvOrderTableTitle.text = "桌台: ${table.name} ($statusText)"
                 binding.btnSaveTableOrder.visibility = View.VISIBLE
-                binding.btnSaveTableOrder.text = "加菜入单"
+                binding.btnSaveTableOrder.text = if (isFromReservation) "更新预定菜单" else "加菜入单"
                 binding.layoutTableOverview.visibility = View.GONE
                 binding.layoutOrderScreen.visibility = View.VISIBLE
                 onLoaded?.invoke()
@@ -463,7 +477,7 @@ class MainActivity : AppCompatActivity() {
                     originalAmount = originalAmount,
                     discountAmount = discountAmount,
                     totalAmount = finalAmount,
-                    payType = "挂单未付",
+                    payType = if (isReservingMode) "预定挂单" else "挂单未付",
                     cashierName = App.currentStaff?.name ?: "收银员",
                     tableId = table.id,
                     tableName = table.name,
@@ -492,23 +506,32 @@ class MainActivity : AppCompatActivity() {
             }
             dao.insertOrderItems(items)
 
-            table.status = "OCCUPIED"
+            // 根据是否是预定模式设置桌台状态
+            table.status = if (isReservingMode) "RESERVED" else "OCCUPIED"
             table.currentOrderId = orderId
             table.currentAmount = finalAmount
             table.openTime = if (table.openTime == 0L) System.currentTimeMillis() else table.openTime
             dao.updateTable(table)
 
             withContext(Dispatchers.Main) {
-                Toast.makeText(this@MainActivity, "桌台 [${table.name}] 挂单成功！总额: ￥${String.format("%.2f", finalAmount)}", Toast.LENGTH_SHORT).show()
+                val msg = if (isReservingMode) "桌台 [${table.name}] 提前预定菜单保存成功！预点总额: ￥${String.format("%.2f", finalAmount)}" else "桌台 [${table.name}] 挂单成功！总额: ￥${String.format("%.2f", finalAmount)}"
+                Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
                 showTableView()
             }
         }
     }
 
+    // 核心独立抹零算法 (无论有无折扣，勾选抹零均自动抹掉角分)
     private fun calculateFinalAmount(): Double {
         val sumAfterItemDiscount = cartList.sumOf { it.subtotal }
-        val finalAfterWhole = (sumAfterItemDiscount * wholeDiscountRate) - wholeDiscountDeduct
-        return Math.max(0.0, finalAfterWhole)
+        var finalAfterWhole = (sumAfterItemDiscount * wholeDiscountRate) - wholeDiscountDeduct
+        finalAfterWhole = Math.max(0.0, finalAfterWhole)
+
+        // 独立抹零逻辑
+        if (isAutoMoling) {
+            finalAfterWhole = floor(finalAfterWhole)
+        }
+        return finalAfterWhole
     }
 
     private fun showPaymentDialog() {
@@ -560,7 +583,7 @@ class MainActivity : AppCompatActivity() {
                 tableId = table?.id ?: 0,
                 tableName = tableName,
                 status = "PAID",
-                discountNote = wholeDiscountNote
+                discountNote = if (isAutoMoling) "$wholeDiscountNote 自动抹零".trim() else wholeDiscountNote
             )
             val orderId = dao.insertOrder(order)
             val items = cartList.map {
@@ -655,14 +678,15 @@ class MainActivity : AppCompatActivity() {
             binding.tvOriginalAmount.visibility = View.VISIBLE
             binding.tvOriginalAmount.text = String.format("原价:￥%.2f", originalTotal)
             binding.tvOriginalAmount.paintFlags = binding.tvOriginalAmount.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-            binding.tvDiscountInfo.text = "已优惠 ￥${String.format("%.2f", totalDiscount)} ($wholeDiscountNote)"
+            val note = if (isAutoMoling) "$wholeDiscountNote (含抹零)" else wholeDiscountNote
+            binding.tvDiscountInfo.text = "已优惠 ￥${String.format("%.2f", totalDiscount)} $note"
         } else {
             binding.tvOriginalAmount.visibility = View.GONE
             binding.tvDiscountInfo.text = ""
         }
     }
 
-    // --- 桌台大厅卡片适配器 ---
+    // --- 桌台大厅卡片适配器 (支持预定点菜识别与区域色彩) ---
     inner class TableGridAdapter(private val list: List<DiningTable>) : RecyclerView.Adapter<TableGridAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val root: View = v.findViewById(R.id.layoutCardRoot)
@@ -695,12 +719,12 @@ class MainActivity : AppCompatActivity() {
 
                     holder.btnAction1.text = "➕ 加菜/查单"
                     holder.btnAction1.setBackgroundColor(Color.parseColor("#F59E0B"))
-                    holder.btnAction1.setOnClickListener { loadOccupiedTableOrder(table) }
+                    holder.btnAction1.setOnClickListener { loadExistingTableOrder(table, isFromReservation = false) }
 
                     holder.btnAction2.text = "💰 结账收款"
                     holder.btnAction2.setBackgroundColor(Color.parseColor("#10B981"))
                     holder.btnAction2.setOnClickListener {
-                        loadOccupiedTableOrder(table) { showPaymentDialog() }
+                        loadExistingTableOrder(table, isFromReservation = false) { showPaymentDialog() }
                     }
 
                     holder.btnAction3.visibility = View.VISIBLE
@@ -716,29 +740,59 @@ class MainActivity : AppCompatActivity() {
                 }
                 "RESERVED" -> {
                     holder.root.setBackgroundColor(Color.parseColor("#EFF6FF"))
-                    holder.tvStatusBadge.text = "🔵 已预定"
+                    val hasPreOrder = (table.currentAmount > 0)
+                    holder.tvStatusBadge.text = if (hasPreOrder) "🔵 已预定 (已预点菜)" else "🔵 已预定"
                     holder.tvStatusBadge.setTextColor(Color.parseColor("#2563EB"))
-                    holder.tvTableInfo.text = "客户预定中"
-                    holder.tvTableAmount.visibility = View.GONE
 
+                    if (hasPreOrder) {
+                        holder.tvTableInfo.text = "预定预点总额："
+                        holder.tvTableAmount.visibility = View.VISIBLE
+                        holder.tvTableAmount.text = String.format("￥%.2f", table.currentAmount)
+                    } else {
+                        holder.tvTableInfo.text = "客户预定中，尚未预点菜品"
+                        holder.tvTableAmount.visibility = View.GONE
+                    }
+
+                    // 到店开台 -> 转为就餐中
                     holder.btnAction1.text = "▶ 到店开台"
                     holder.btnAction1.setBackgroundColor(Color.parseColor("#059669"))
                     holder.btnAction1.setOnClickListener {
-                        table.status = "IDLE"
-                        startOrderForTable(table)
+                        table.status = "OCCUPIED"
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            App.instance.database.posDao().updateTable(table)
+                            withContext(Dispatchers.Main) {
+                                if (hasPreOrder) {
+                                    loadExistingTableOrder(table, isFromReservation = false)
+                                } else {
+                                    startOrderForTable(table)
+                                }
+                            }
+                        }
                     }
 
-                    holder.btnAction2.text = "✖ 取消预定"
-                    holder.btnAction2.setBackgroundColor(Color.parseColor("#6B7280"))
+                    // 预点菜/查单按钮
+                    holder.btnAction2.text = if (hasPreOrder) "➕ 预点查/加" else "🍽 提前预点菜"
+                    holder.btnAction2.setBackgroundColor(Color.parseColor("#2563EB"))
                     holder.btnAction2.setOnClickListener {
-                        table.status = "IDLE"
+                        if (hasPreOrder) {
+                            loadExistingTableOrder(table, isFromReservation = true)
+                        } else {
+                            startPreOrderForReservation(table)
+                        }
+                    }
+
+                    holder.btnAction3.visibility = View.VISIBLE
+                    holder.btnAction3.text = "退订"
+                    holder.btnAction3.setOnClickListener {
                         lifecycleScope.launch(Dispatchers.IO) {
+                            table.status = "IDLE"
+                            table.currentOrderId = 0
+                            table.currentAmount = 0.0
                             App.instance.database.posDao().updateTable(table)
                         }
                     }
-                    holder.btnAction3.visibility = View.GONE
                 }
-                else -> {
+                else -> { // 空闲
                     val areaBgColor = when (table.area) {
                         "包厢" -> "#FEF9C3"
                         "卡座" -> "#FCE7F3"
@@ -755,13 +809,22 @@ class MainActivity : AppCompatActivity() {
                     holder.btnAction1.setBackgroundColor(Color.parseColor("#059669"))
                     holder.btnAction1.setOnClickListener { startOrderForTable(table) }
 
+                    // 预定按键：支持选择“仅预定”或“提前点菜”
                     holder.btnAction2.text = "📅 设为预定"
                     holder.btnAction2.setBackgroundColor(Color.parseColor("#2563EB"))
                     holder.btnAction2.setOnClickListener {
-                        table.status = "RESERVED"
-                        lifecycleScope.launch(Dispatchers.IO) {
-                            App.instance.database.posDao().updateTable(table)
-                        }
+                        AlertDialog.Builder(this@MainActivity)
+                            .setTitle("预定桌台: ${table.name}")
+                            .setItems(arrayOf("1. 仅预定桌位 (稍后到店点菜)", "2. 预定并提前点菜 (记录预定菜单)")) { _, which ->
+                                if (which == 0) {
+                                    table.status = "RESERVED"
+                                    lifecycleScope.launch(Dispatchers.IO) {
+                                        App.instance.database.posDao().updateTable(table)
+                                    }
+                                } else {
+                                    startPreOrderForReservation(table)
+                                }
+                            }.show()
                     }
                     holder.btnAction3.visibility = View.GONE
                 }

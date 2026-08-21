@@ -132,7 +132,7 @@ class ManageActivity : AppCompatActivity() {
                 "TABLES" -> {
                     val tables = dao.getAllTables().first()
                     withContext(Dispatchers.Main) {
-                        binding.tvManageHeaderInfo.text = "桌台总数: ${tables.size} 张 (已按大厅/包厢/露台色彩分区)"
+                        binding.tvManageHeaderInfo.text = "桌台总数: ${tables.size} 张 (已按区域色彩分类)"
                         binding.rvManageList.adapter = TableListAdapter(tables)
                     }
                 }
@@ -147,7 +147,6 @@ class ManageActivity : AppCompatActivity() {
         }
     }
 
-    // 分类按钮网格选择器
     private fun showCategoryButtonGridSelector(categories: List<Category>, onSelected: (Category) -> Unit) {
         val dialogView = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -156,7 +155,7 @@ class ManageActivity : AppCompatActivity() {
 
         val tv = TextView(this).apply {
             text = "点击下方分类按钮快速选择："
-            textSize = 14f // 修正为 Float
+            textSize = 14f
             setTextColor(Color.parseColor("#4B5563"))
         }
         dialogView.addView(tv)
@@ -177,7 +176,7 @@ class ManageActivity : AppCompatActivity() {
         for (cat in categories) {
             val btn = Button(this).apply {
                 text = cat.name
-                textSize = 15f // 修正为 Float
+                textSize = 15f
                 setTextColor(Color.parseColor("#111827"))
                 setBackgroundColor(Color.parseColor("#F3F4F6"))
                 layoutParams = GridLayout.LayoutParams().apply {
@@ -362,19 +361,27 @@ class ManageActivity : AppCompatActivity() {
             }.setNegativeButton("取消", null).show()
     }
 
-    // 4. 桌台增改
+    // 4. 桌台增改 (选择区域完全按色彩上色)
     private fun showEditTableDialog(table: DiningTable?) {
-        val areas = arrayOf("大厅", "包厢", "卡座", "露台")
+        val areaConfigs = listOf(
+            Triple("大厅", "#E0E7FF", "#3730A3"),
+            Triple("包厢", "#FEF3C7", "#B45309"),
+            Triple("卡座", "#FCE7F3", "#9D174D"),
+            Triple("露台", "#CCFBF1", "#0F766E")
+        )
+
         var selectedArea = table?.area ?: "大厅"
 
         val etName = EditText(this).apply {
             hint = "桌台名称 (如: A08, 包厢V8)"
             setText(table?.name ?: "")
         }
+
         val btnArea = Button(this).apply {
+            val matching = areaConfigs.find { it.first == selectedArea } ?: areaConfigs[0]
             text = "所属区域: $selectedArea (点击切换)"
-            setBackgroundColor(Color.parseColor("#E0E7FF"))
-            setTextColor(Color.parseColor("#3730A3"))
+            setBackgroundColor(Color.parseColor(matching.second))
+            setTextColor(Color.parseColor(matching.third))
         }
 
         btnArea.setOnClickListener {
@@ -388,13 +395,19 @@ class ManageActivity : AppCompatActivity() {
                 .setNegativeButton("取消", null)
                 .create()
 
-            for (a in areas) {
+            // 区域选择按钮全部使用对应区域色彩上色！
+            for (item in areaConfigs) {
                 val b = Button(this@ManageActivity).apply {
-                    text = a
-                    layoutParams = LinearLayout.LayoutParams(0, 100, 1f).apply { marginEnd = 6 }
+                    text = item.first
+                    textSize = 14f
+                    setBackgroundColor(Color.parseColor(item.second))
+                    setTextColor(Color.parseColor(item.third))
+                    layoutParams = LinearLayout.LayoutParams(0, 110, 1f).apply { marginEnd = 6 }
                     setOnClickListener {
-                        selectedArea = a
-                        btnArea.text = "所属区域: $a (点击切换)"
+                        selectedArea = item.first
+                        btnArea.text = "所属区域: ${item.first} (点击切换)"
+                        btnArea.setBackgroundColor(Color.parseColor(item.second))
+                        btnArea.setTextColor(Color.parseColor(item.third))
                         areaDialog.dismiss()
                     }
                 }
@@ -438,7 +451,7 @@ class ManageActivity : AppCompatActivity() {
         var selectedType = config?.type ?: "RATE"
 
         val etName = EditText(this).apply {
-            hint = "按键名称 (如: 9折, 88折, 减5元, 抹零)"
+            hint = "按键名称 (如: 9折, 88折, 减5元)"
             setText(config?.name ?: "")
         }
 
@@ -449,28 +462,23 @@ class ManageActivity : AppCompatActivity() {
 
         val btnRate = Button(this).apply { text = "比例打折"; layoutParams = LinearLayout.LayoutParams(0, 90, 1f) }
         val btnDeduct = Button(this).apply { text = "固定立减"; layoutParams = LinearLayout.LayoutParams(0, 90, 1f) }
-        val btnMoling = Button(this).apply { text = "自动抹零"; layoutParams = LinearLayout.LayoutParams(0, 90, 1f) }
 
         fun updateTypeBtnStyles() {
             btnRate.setBackgroundColor(if (selectedType == "RATE") Color.parseColor("#1E2433") else Color.parseColor("#E5E7EB"))
             btnRate.setTextColor(if (selectedType == "RATE") Color.WHITE else Color.parseColor("#111827"))
             btnDeduct.setBackgroundColor(if (selectedType == "DEDUCT") Color.parseColor("#1E2433") else Color.parseColor("#E5E7EB"))
             btnDeduct.setTextColor(if (selectedType == "DEDUCT") Color.WHITE else Color.parseColor("#111827"))
-            btnMoling.setBackgroundColor(if (selectedType == "MOLING") Color.parseColor("#1E2433") else Color.parseColor("#E5E7EB"))
-            btnMoling.setTextColor(if (selectedType == "MOLING") Color.WHITE else Color.parseColor("#111827"))
         }
         updateTypeBtnStyles()
 
         btnRate.setOnClickListener { selectedType = "RATE"; updateTypeBtnStyles() }
         btnDeduct.setOnClickListener { selectedType = "DEDUCT"; updateTypeBtnStyles() }
-        btnMoling.setOnClickListener { selectedType = "MOLING"; updateTypeBtnStyles() }
 
         typeButtons.addView(btnRate)
         typeButtons.addView(btnDeduct)
-        typeButtons.addView(btnMoling)
 
         val etValue = EditText(this).apply {
-            hint = "数值 (如: 0.9 或 10, 抹零填0)"
+            hint = "数值 (如: 0.9 或 10)"
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
             setText(if (config != null) config.value.toString() else "")
         }
@@ -611,6 +619,7 @@ class ManageActivity : AppCompatActivity() {
         override fun getItemCount() = list.size
     }
 
+    // 桌台管理：按区域分类色彩渲染
     inner class TableListAdapter(private val list: List<DiningTable>) : RecyclerView.Adapter<TableListAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val tvTitle: TextView = v.findViewById(R.id.tvRowTitle)
@@ -623,8 +632,20 @@ class ManageActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: VH, position: Int) {
             val table = list[position]
-            holder.tvTitle.text = "${table.name} [${table.area}]"
-            holder.tvSubtitle.text = "区域: ${table.area} | 建议客容量: ${table.capacity}人 | 状态: ${if(table.status=="OCCUPIED")"就餐中" else if(table.status=="RESERVED")"已预定" else "空闲"}"
+
+            // 区域色彩映射
+            val (bgColor, textColor) = when (table.area) {
+                "包厢" -> "#FEF3C7" to "#B45309"
+                "卡座" -> "#FCE7F3" to "#9D174D"
+                "露台" -> "#CCFBF1" to "#0F766E"
+                else -> "#E0E7FF" to "#3730A3"
+            }
+
+            holder.tvTitle.text = "${table.name} 【${table.area}】"
+            holder.tvTitle.setTextColor(Color.parseColor(textColor))
+
+            val statusDesc = if (table.status == "OCCUPIED") "就餐中 (消费 ￥${table.currentAmount})" else if (table.status == "RESERVED") "已预定" else "空闲"
+            holder.tvSubtitle.text = "区域: ${table.area} | 建议容量: ${table.capacity}人桌 | 状态: $statusDesc"
 
             holder.btnEdit.setOnClickListener { showEditTableDialog(table) }
             holder.btnDelete.setOnClickListener {
@@ -655,11 +676,7 @@ class ManageActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: VH, position: Int) {
             val cfg = list[position]
             holder.tvTitle.text = cfg.name
-            val desc = when (cfg.type) {
-                "RATE" -> "按比例打折 (${(cfg.value * 10).toInt()}折)"
-                "DEDUCT" -> "固定金额立减 (减￥${cfg.value})"
-                else -> "去分去角自动抹零"
-            }
+            val desc = if (cfg.type == "RATE") "按比例打折 (${(cfg.value * 10).toInt()}折)" else "固定金额立减 (减￥${cfg.value})"
             holder.tvSubtitle.text = "按键参数: $desc"
 
             holder.btnEdit.setOnClickListener { showEditDiscountDialog(cfg) }
