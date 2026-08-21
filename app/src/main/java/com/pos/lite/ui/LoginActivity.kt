@@ -37,22 +37,12 @@ class LoginActivity : AppCompatActivity() {
         )
 
         for ((id, num) in numMap) {
-            findViewById<Button>(id).setOnClickListener {
-                appendDigit(num)
-            }
+            findViewById<TextView>(id).setOnClickListener { appendDigit(num) }
         }
 
-        findViewById<Button>(R.id.btnDelete).setOnClickListener {
-            deleteDigit()
-        }
-
-        findViewById<Button>(R.id.btnClear).setOnClickListener {
-            clearDigits()
-        }
-
-        findViewById<Button>(R.id.btnLogin).setOnClickListener {
-            submitLogin()
-        }
+        findViewById<TextView>(R.id.btnDelete).setOnClickListener { deleteDigit() }
+        findViewById<TextView>(R.id.btnClear).setOnClickListener { clearDigits() }
+        findViewById<Button>(R.id.btnLogin).setOnClickListener { submitLogin() }
     }
 
     private fun appendDigit(d: String) {
@@ -91,7 +81,6 @@ class LoginActivity : AppCompatActivity() {
         performLogin(pin)
     }
 
-    // 适配 WSA / 电脑物理键盘 / 收银机外接数字小键盘输入
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         when (keyCode) {
             KeyEvent.KEYCODE_0, KeyEvent.KEYCODE_NUMPAD_0 -> appendDigit("0")
@@ -116,7 +105,6 @@ class LoginActivity : AppCompatActivity() {
             val dao = App.instance.database.posDao()
             var staff = dao.loginWithPin(pin)
 
-            // 保底逻辑：如果数据库在首次初始化中还没落盘完成，提供内置管理员直通
             if (staff == null) {
                 if (pin == "888888") {
                     staff = Staff(name = "店长", pinCode = "888888", role = "ADMIN")
@@ -130,7 +118,7 @@ class LoginActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 if (staff != null) {
                     App.currentStaff = staff
-                    Toast.makeText(this@LoginActivity, "登录成功: ${staff.name}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@LoginActivity, "欢迎: ${staff.name}", Toast.LENGTH_SHORT).show()
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                     finish()
                 } else {
