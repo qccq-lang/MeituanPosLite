@@ -37,11 +37,11 @@ class LoginActivity : AppCompatActivity() {
         )
 
         for ((id, num) in numMap) {
-            findViewById<TextView>(id).setOnClickListener { appendDigit(num) }
+            findViewById<Button>(id).setOnClickListener { appendDigit(num) }
         }
 
-        findViewById<TextView>(R.id.btnDelete).setOnClickListener { deleteDigit() }
-        findViewById<TextView>(R.id.btnClear).setOnClickListener { clearDigits() }
+        findViewById<Button>(R.id.btnDelete).setOnClickListener { deleteDigit() }
+        findViewById<Button>(R.id.btnClear).setOnClickListener { clearDigits() }
         findViewById<Button>(R.id.btnLogin).setOnClickListener { submitLogin() }
     }
 
