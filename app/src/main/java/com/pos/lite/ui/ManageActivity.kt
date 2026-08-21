@@ -2,6 +2,7 @@ package com.pos.lite.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -10,7 +11,6 @@ import androidx.lifecycle.lifecycleScope
 import com.pos.lite.App
 import com.pos.lite.R
 import com.pos.lite.data.Category
-import com.pos.lite.data.DiningTable
 import com.pos.lite.data.Product
 import com.pos.lite.data.Staff
 import com.pos.lite.databinding.ActivityManageBinding
@@ -82,7 +82,7 @@ class ManageActivity : AppCompatActivity() {
             val view = LayoutInflater.from(this@ManageActivity).inflate(R.layout.dialog_add_product, null, false)
             val etName = view.findViewById<EditText>(R.id.etProductName)
             val etPrice = view.findViewById<EditText>(R.id.etProductPrice)
-            val btnSelectCat = view.findViewById<android.widget.Button>(R.id.btnChooseCategory)
+            val btnSelectCat = view.findViewById<Button>(R.id.btnChooseCategory)
             btnSelectCat.text = "分类: " + catNames[0]
 
             btnSelectCat.setOnClickListener {
