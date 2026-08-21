@@ -41,7 +41,7 @@
             android:lineSpacingExtra="6dp"/>
     </LinearLayout>
 
-    <!-- 右侧实体按键键盘 (严格等宽高 3x4 网格) -->
+    <!-- 右侧实体按键键盘 (4行严格等宽等高对齐) -->
     <LinearLayout
         android:layout_width="400dp"
         android:layout_height="match_parent"
@@ -72,29 +72,64 @@
             android:textStyle="bold"
             android:letterSpacing="0.3" />
 
-        <!-- 3x4 严格等比例对齐按键 -->
-        <GridLayout
+        <!-- 4行完全等比对称布局 -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:columnCount="3">
+            android:orientation="vertical"
+            android:layout_marginTop="20dp">
 
-            <TextView android:id="@+id/btn1" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
-            <TextView android:id="@+id/btn2" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
-            <TextView android:id="@+id/btn3" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+            <!-- 第一排: 1, 2, 3 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:orientation="horizontal"
+                android:weightSum="3"
+                android:layout_marginBottom="8dp">
 
-            <TextView android:id="@+id/btn4" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
-            <TextView android:id="@+id/btn5" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
-            <TextView android:id="@+id/btn6" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginHorizontal="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+            </LinearLayout>
 
-            <TextView android:id="@+id/btn7" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
-            <TextView android:id="@+id/btn8" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
-            <TextView android:id="@+id/btn9" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+            <!-- 第二排: 4, 5, 6 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:orientation="horizontal"
+                android:weightSum="3"
+                android:layout_marginBottom="8dp">
 
-            <TextView android:id="@+id/btnClear" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="18sp" android:textStyle="bold" android:background="#FEE2E2" android:clickable="true" android:focusable="true"/>
-            <TextView android:id="@+id/btn0" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
-            <TextView android:id="@+id/btnDelete" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="22sp" android:textStyle="bold" android:background="#E5E7EB" android:clickable="true" android:focusable="true"/>
-        </GridLayout>
+                <TextView android:id="@+id/btn4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginHorizontal="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn6" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+            </LinearLayout>
+
+            <!-- 第三排: 7, 8, 9 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:orientation="horizontal"
+                android:weightSum="3"
+                android:layout_marginBottom="8dp">
+
+                <TextView android:id="@+id/btn7" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn8" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginHorizontal="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn9" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+            </LinearLayout>
+
+            <!-- 第四排: 清空, 0, 删除 (完全等宽等高对齐) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:orientation="horizontal"
+                android:weightSum="3">
+
+                <TextView android:id="@+id/btnClear" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="4dp" android:gravity="center" android:textSize="18sp" android:textStyle="bold" android:background="#FEE2E2" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn0" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginHorizontal="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btnDelete" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="4dp" android:gravity="center" android:textSize="22sp" android:textStyle="bold" android:background="#E5E7EB" android:clickable="true" android:focusable="true"/>
+            </LinearLayout>
+        </LinearLayout>
 
         <Button
             android:id="@+id/btnLogin"

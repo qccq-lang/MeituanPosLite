@@ -112,6 +112,14 @@ class ReportActivity : AppCompatActivity() {
             val orderCount = orders.size
             val avgPerOrder = if (orderCount > 0) totalSales / orderCount else 0.0
 
+            // 核心统计：按收款账号/收银员汇总业绩
+            val cashierMap = orders.groupBy { it.cashierName }
+            val cashierSb = StringBuilder()
+            for ((name, list) in cashierMap) {
+                val sum = list.sumOf { it.totalAmount }
+                cashierSb.append("• $name: ${list.size} 笔 (实收 ￥${String.format("%.2f", sum)})\n")
+            }
+
             // 场景分布
             val tableOrders = orders.filter { it.tableId > 0 }
             val fastFoodOrders = orders.filter { it.tableId == 0L }
@@ -127,7 +135,10 @@ class ReportActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 binding.tvTotalSales.text = String.format("￥%.2f", totalSales)
                 binding.tvOriginalAndDiscount.text = String.format("原价总额: ￥%.2f | 优惠让利: ￥%.2f", totalOriginal, totalDiscount)
-                binding.tvOrderCountAndAvg.text = "有效订单: $orderCount 笔 | 客单价: ￥${String.format("%.2f", avgPerOrder)}"
+                binding.tvOrderCountAndAvg.text = "有效单量: $orderCount 笔 | 客单价: ￥${String.format("%.2f", avgPerOrder)}"
+
+                // 显示收银员对账分布
+                binding.tvCashierDistribution.text = if (cashierSb.isNotEmpty()) cashierSb.toString().trim() else "暂无收银数据"
 
                 binding.tvTypeDistribution.text = "• 🪑 堂食桌台: ${tableOrders.size} 笔 (￥${String.format("%.2f", tableOrders.sumOf { it.totalAmount })})\n• ⚡ 快餐外带: ${fastFoodOrders.size} 笔 (￥${String.format("%.2f", fastFoodOrders.sumOf { it.totalAmount })})"
                 binding.tvPayDistribution.text = if (paySb.isNotEmpty()) paySb.toString().trim() else "暂无支付明细"
@@ -145,11 +156,11 @@ class ReportActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 val sb = StringBuilder()
                 sb.append("单号: ${order.orderNo}\n")
-                sb.append("桌号/类型: ${order.tableName}\n")
+                sb.append("桌号/场景: ${order.tableName}\n")
+                sb.append("收款账号: ${order.cashierName}\n")
                 sb.append("时间: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA).format(Date(order.timestamp))}\n")
-                sb.append("收银员: ${order.cashierName}\n")
                 sb.append("支付方式: ${order.payType}\n")
-                if (order.discountNote.isNotEmpty()) sb.append("整单折扣: ${order.discountNote}\n")
+                if (order.discountNote.isNotEmpty()) sb.append("优惠说明: ${order.discountNote}\n")
                 sb.append("--------------------------------\n")
                 sb.append(String.format("%-12s %-4s %-6s\n", "菜品", "数量", "金额"))
                 for (it in items) {
@@ -162,7 +173,7 @@ class ReportActivity : AppCompatActivity() {
                 sb.append(String.format("实收金额: ￥%.2f\n", order.totalAmount))
 
                 AlertDialog.Builder(this@ReportActivity)
-                    .setTitle("单据小票明细")
+                    .setTitle("单据小票明细 (收款人: ${order.cashierName})")
                     .setMessage(sb.toString())
                     .setPositiveButton("补打小票") { _, _ ->
                         PosPrinterHelper.printReceipt(this@ReportActivity, order, items)
@@ -177,6 +188,7 @@ class ReportActivity : AppCompatActivity() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val tvTable: TextView = v.findViewById(R.id.tvOrderTable)
             val tvPayType: TextView = v.findViewById(R.id.tvOrderPayType)
+            val tvCashierBadge: TextView = v.findViewById(R.id.tvOrderCashierBadge)
             val tvDiscountBadge: TextView = v.findViewById(R.id.tvOrderDiscountBadge)
             val tvNoAndTime: TextView = v.findViewById(R.id.tvOrderNoAndTime)
             val tvAmount: TextView = v.findViewById(R.id.tvOrderAmount)
@@ -189,6 +201,7 @@ class ReportActivity : AppCompatActivity() {
             val order = list[position]
             holder.tvTable.text = order.tableName
             holder.tvPayType.text = "[${order.payType}]"
+            holder.tvCashierBadge.text = "收款: ${order.cashierName}"
             holder.tvAmount.text = String.format("￥%.2f", order.totalAmount)
 
             if (order.discountAmount > 0) {
@@ -199,7 +212,7 @@ class ReportActivity : AppCompatActivity() {
             }
 
             val timeStr = SimpleDateFormat("MM-dd HH:mm", Locale.CHINA).format(Date(order.timestamp))
-            holder.tvNoAndTime.text = "时间: $timeStr | 单号: ${order.orderNo} | 收银员: ${order.cashierName}"
+            holder.tvNoAndTime.text = "时间: $timeStr | 单号: ${order.orderNo}"
 
             holder.itemView.setOnClickListener { showOrderDetailDialog(order) }
         }

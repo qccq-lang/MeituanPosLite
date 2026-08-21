@@ -24,7 +24,7 @@ interface PosDao {
     @Query("DELETE FROM staffs WHERE id = :id")
     suspend fun deleteStaffById(id: Long)
 
-    // 桌台 (按区域聚类分组排序)
+    // 桌台
     @Query("SELECT * FROM dining_tables ORDER BY area ASC, name ASC, id ASC")
     fun getAllTables(): Flow<List<DiningTable>>
 
@@ -89,11 +89,20 @@ interface PosDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrder(order: Order): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOrders(orders: List<Order>)
+
     @Update
     suspend fun updateOrder(order: Order)
 
     @Query("SELECT * FROM orders WHERE orderId = :orderId")
     suspend fun getOrderById(orderId: Long): Order?
+
+    @Query("SELECT * FROM orders ORDER BY timestamp DESC")
+    suspend fun getAllOrders(): List<Order>
+
+    @Query("SELECT * FROM order_items")
+    suspend fun getAllOrderItems(): List<OrderItem>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrderItems(items: List<OrderItem>)

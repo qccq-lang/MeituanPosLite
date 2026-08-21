@@ -20,13 +20,16 @@
             android:layout_height="38dp"
             android:text="← 返回前台"
             android:textColor="#111827"
-            android:backgroundTint="#FFC300"/>
+            android:backgroundTint="#FFC300"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:singleLine="true"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:text="📊 门店营业报表与流水分析"
+            android:text="📊 门店营业报表与收银对账"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="#111827"/>
@@ -36,14 +39,16 @@
             android:layout_height="match_parent"
             android:layout_weight="1"/>
 
-        <!-- 维度切换：今日 / 本月 / 本年 -->
         <Button
             android:id="@+id/btnFilterToday"
             android:layout_width="wrap_content"
             android:layout_height="38dp"
             android:text="今日"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#1E2433"/>
+            android:backgroundTint="#1E2433"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:singleLine="true"/>
 
         <Button
             android:id="@+id/btnFilterMonth"
@@ -52,7 +57,10 @@
             android:layout_marginStart="8dp"
             android:text="本月"
             android:textColor="#111827"
-            android:backgroundTint="#E5E7EB"/>
+            android:backgroundTint="#E5E7EB"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:singleLine="true"/>
 
         <Button
             android:id="@+id/btnFilterYear"
@@ -61,7 +69,10 @@
             android:layout_marginStart="8dp"
             android:text="本年"
             android:textColor="#111827"
-            android:backgroundTint="#E5E7EB"/>
+            android:backgroundTint="#E5E7EB"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:singleLine="true"/>
     </LinearLayout>
 
     <LinearLayout
@@ -70,98 +81,127 @@
         android:orientation="horizontal"
         android:padding="16dp">
 
-        <!-- 左侧：多维统计与分析卡片 (35% 宽度) -->
-        <LinearLayout
+        <!-- 左侧：多维统计分析卡片 (38% 宽度) -->
+        <ScrollView
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="3.5"
-            android:orientation="vertical"
+            android:layout_weight="3.8"
             android:background="#FFFFFF"
-            android:padding="16dp"
             android:elevation="2dp">
 
-            <TextView
-                android:id="@+id/tvReportPeriod"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="统计周期: 今日"
-                android:textSize="14sp"
-                android:textColor="#6B7280"/>
-
-            <TextView
-                android:id="@+id/tvTotalSales"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="￥0.00"
-                android:textSize="32sp"
-                android:textStyle="bold"
-                android:textColor="#EF4444"/>
-
-            <TextView
-                android:id="@+id/tvOriginalAndDiscount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="原价总计: ￥0.00 | 优惠让利: ￥0.00"
-                android:textSize="12sp"
-                android:textColor="#9CA3AF"/>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#E5E7EB"
-                android:layout_marginVertical="12dp"/>
-
-            <!-- 经营指标 -->
-            <TextView
-                android:id="@+id/tvOrderCountAndAvg"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="有效订单: 0 笔 | 客单价: ￥0.00"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                android:textColor="#111827"/>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#E5E7EB"
-                android:layout_marginVertical="12dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="渠道与场景分布："
-                android:textStyle="bold"
-                android:textSize="14sp"
-                android:textColor="#111827"/>
-
-            <TextView
-                android:id="@+id/tvTypeDistribution"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="堂食桌台: 0 笔 (￥0.00)\n快餐外带: 0 笔 (￥0.00)"
-                android:lineSpacingExtra="4dp"
-                android:textSize="13sp"
-                android:textColor="#4B5563"/>
+                android:orientation="vertical"
+                android:padding="16dp">
 
-            <TextView
-                android:id="@+id/tvPayDistribution"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="支付方式明细..."
-                android:lineSpacingExtra="4dp"
-                android:textSize="13sp"
-                android:textColor="#4B5563"/>
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/tvReportPeriod"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="统计周期: 今日"
+                    android:textSize="14sp"
+                    android:textColor="#6B7280"/>
 
-        <!-- 右侧：流水订单明细列表 (65% 宽度) -->
+                <TextView
+                    android:id="@+id/tvTotalSales"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="￥0.00"
+                    android:textSize="32sp"
+                    android:textStyle="bold"
+                    android:textColor="#EF4444"/>
+
+                <TextView
+                    android:id="@+id/tvOriginalAndDiscount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="原价: ￥0.00 | 优惠让利: ￥0.00"
+                    android:textSize="12sp"
+                    android:textColor="#9CA3AF"/>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E5E7EB"
+                    android:layout_marginVertical="10dp"/>
+
+                <TextView
+                    android:id="@+id/tvOrderCountAndAvg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="有效单量: 0 笔 | 客单价: ￥0.00"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#111827"/>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E5E7EB"
+                    android:layout_marginVertical="10dp"/>
+
+                <!-- 收银账号对账汇总 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="👤 各收银员业绩对账："
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:textColor="#111827"/>
+
+                <TextView
+                    android:id="@+id/tvCashierDistribution"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="暂无数据"
+                    android:lineSpacingExtra="4dp"
+                    android:textSize="13sp"
+                    android:textColor="#059669"/>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E5E7EB"
+                    android:layout_marginVertical="10dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🪑 场景与支付渠道分布："
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:textColor="#111827"/>
+
+                <TextView
+                    android:id="@+id/tvTypeDistribution"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="堂食桌台: 0 笔\n快餐外带: 0 笔"
+                    android:lineSpacingExtra="4dp"
+                    android:textSize="13sp"
+                    android:textColor="#4B5563"/>
+
+                <TextView
+                    android:id="@+id/tvPayDistribution"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="支付方式明细..."
+                    android:lineSpacingExtra="4dp"
+                    android:textSize="13sp"
+                    android:textColor="#4B5563"/>
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- 右侧：流水订单明细列表 (62% 宽度) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="6.5"
+            android:layout_weight="6.2"
             android:layout_marginStart="16dp"
             android:orientation="vertical"
             android:background="#FFFFFF"
@@ -171,7 +211,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="单据流水列表 (点击单据查看小票与菜品明细)"
+                android:text="销售订单流水 (显式标明收款账号，点击可补打小票)"
                 android:textSize="15sp"
                 android:textStyle="bold"
                 android:textColor="#111827"/>

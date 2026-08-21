@@ -786,7 +786,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-                else -> { // 空闲状态：3个直达大按钮，绝无二次弹窗！
+                else -> { // 空闲状态
                     val areaBgColor = when (table.area) {
                         "包厢" -> "#FEF9C3"
                         "卡座" -> "#FCE7F3"
@@ -799,12 +799,12 @@ class MainActivity : AppCompatActivity() {
                     holder.tvTableInfo.text = "桌位空闲就绪"
                     holder.tvTableAmount.visibility = View.GONE
 
-                    // 按钮1：直接开台
+                    // 按钮1：开台
                     holder.btnAction1.text = "开台"
                     holder.btnAction1.setBackgroundColor(Color.parseColor("#059669"))
                     holder.btnAction1.setOnClickListener { startOrderForTable(table) }
 
-                    // 按钮2：一键纯预定 (不弹二级窗口)
+                    // 按钮2：预定
                     holder.btnAction2.text = "预定"
                     holder.btnAction2.setBackgroundColor(Color.parseColor("#2563EB"))
                     holder.btnAction2.setOnClickListener {
@@ -814,9 +814,9 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
 
-                    // 按钮3：直接进入预定点菜
+                    // 按钮3：预点 (直接进入预定点菜)
                     holder.btnAction3.visibility = View.VISIBLE
-                    holder.btnAction3.text = "预定点菜"
+                    holder.btnAction3.text = "预点"
                     holder.btnAction3.setBackgroundColor(Color.parseColor("#8B5CF6"))
                     holder.btnAction3.setOnClickListener {
                         startPreOrderForReservation(table)

@@ -39,23 +39,25 @@ import java.util.*
 class ManageActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityManageBinding
-    private var currentTab = "PRODUCTS" // PRODUCTS / CATEGORIES / STAFFS / TABLES / DISCOUNTS / BACKUP
+    private var currentTab = "PRODUCTS"
 
     private var tempSelectedImageUri: String = ""
     private var dialogPreviewImageView: ImageView? = null
 
-    // 全量备份数据结构
+    // 全量备份数据结构 (包含配置 + 历史订单 + 明细流水)
     data class PosFullBackupData(
-        val version: Int = 1,
+        val version: Int = 2,
         val exportTime: String = "",
         val categories: List<Category> = emptyList(),
         val products: List<Product> = emptyList(),
         val tables: List<DiningTable> = emptyList(),
         val staffs: List<Staff> = emptyList(),
-        val discountConfigs: List<DiscountConfig> = emptyList()
+        val discountConfigs: List<DiscountConfig> = emptyList(),
+        val orders: List<Order> = emptyList(),             // 所有历史订单流水
+        val orderItems: List<OrderItem> = emptyList()      // 所有历史单据明细
     )
 
-    // 1. 相册选图注册器
+    // 相册选图
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             tempSelectedImageUri = it.toString()
@@ -66,19 +68,21 @@ class ManageActivity : AppCompatActivity() {
         }
     }
 
-    // 2. 导出文件创建器 (生成 JSON)
+    // 全量数据导出器
     private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
         uri?.let { targetUri ->
             lifecycleScope.launch(Dispatchers.IO) {
                 val dao = App.instance.database.posDao()
                 val backup = PosFullBackupData(
-                    version = 1,
+                    version = 2,
                     exportTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA).format(Date()),
                     categories = dao.getAllCategories().first(),
                     products = dao.getAllProducts().first(),
                     tables = dao.getAllTables().first(),
                     staffs = dao.getAllStaffs().first(),
-                    discountConfigs = dao.getAllDiscountConfigs().first()
+                    discountConfigs = dao.getAllDiscountConfigs().first(),
+                    orders = dao.getAllOrders(),
+                    orderItems = dao.getAllOrderItems()
                 )
 
                 val jsonString = Gson().toJson(backup)
@@ -88,7 +92,7 @@ class ManageActivity : AppCompatActivity() {
                         out.flush()
                     }
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@ManageActivity, "✅ 全量数据导出备份成功！", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@ManageActivity, "✅ 全量备份导出成功 (含${backup.orders.size}笔历史订单)！", Toast.LENGTH_LONG).show()
                     }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
@@ -99,7 +103,7 @@ class ManageActivity : AppCompatActivity() {
         }
     }
 
-    // 3. 导入文件选择器 (读取 JSON 并恢复)
+    // 全量数据导入恢复器
     private val importLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { sourceUri ->
             lifecycleScope.launch(Dispatchers.IO) {
@@ -119,9 +123,9 @@ class ManageActivity : AppCompatActivity() {
                     withContext(Dispatchers.Main) {
                         if (backup != null) {
                             AlertDialog.Builder(this@ManageActivity)
-                                .setTitle("确认恢复数据")
-                                .setMessage("备份时间: ${backup.exportTime}\n包含 ${backup.products.size} 个菜品、${backup.tables.size} 张桌台、${backup.categories.size} 个分类\n\n确定导入并覆盖当前数据吗？")
-                                .setPositiveButton("立即导入") { _, _ ->
+                                .setTitle("确认全量恢复")
+                                .setMessage("备份时间: ${backup.exportTime}\n\n包含：\n• 菜品: ${backup.products.size} 种\n• 桌台: ${backup.tables.size} 张\n• 分类: ${backup.categories.size} 个\n• 历史流水订单: ${backup.orders.size} 笔\n• 历史菜品明细: ${backup.orderItems.size} 条\n\n确定导入并恢复所有数据吗？")
+                                .setPositiveButton("立即导入恢复") { _, _ ->
                                     executeImportData(backup)
                                 }
                                 .setNegativeButton("取消", null)
@@ -143,19 +147,16 @@ class ManageActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             val dao = App.instance.database.posDao()
 
-            // 导入分类
             for (c in backup.categories) dao.insertCategory(c)
-            // 导入菜品
             for (p in backup.products) dao.insertProduct(p)
-            // 导入桌台
             for (t in backup.tables) dao.insertTable(t)
-            // 导入员工
             for (s in backup.staffs) dao.insertStaff(s)
-            // 导入折扣
             for (d in backup.discountConfigs) dao.insertDiscountConfig(d)
+            if (backup.orders.isNotEmpty()) dao.insertOrders(backup.orders)
+            if (backup.orderItems.isNotEmpty()) dao.insertOrderItems(backup.orderItems)
 
             withContext(Dispatchers.Main) {
-                Toast.makeText(this@ManageActivity, "🎉 数据恢复成功！已全部生效", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@ManageActivity, "🎉 数据及所有历史流水恢复成功！", Toast.LENGTH_LONG).show()
                 switchTab("PRODUCTS")
             }
         }
@@ -176,9 +177,8 @@ class ManageActivity : AppCompatActivity() {
         binding.btnTabDiscounts.setOnClickListener { switchTab("DISCOUNTS") }
         binding.btnTabBackup.setOnClickListener { switchTab("BACKUP") }
 
-        // 备份与恢复按键
         binding.btnExportJson.setOnClickListener {
-            val defaultFileName = "pos_backup_" + SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA).format(Date()) + ".json"
+            val defaultFileName = "pos_full_backup_" + SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA).format(Date()) + ".json"
             exportLauncher.launch(defaultFileName)
         }
 
@@ -220,7 +220,7 @@ class ManageActivity : AppCompatActivity() {
             binding.btnAddNewItem.visibility = View.GONE
             binding.rvManageList.visibility = View.GONE
             binding.layoutBackupPanel.visibility = View.VISIBLE
-            binding.tvManageHeaderInfo.text = "门店数据备份与容灾恢复"
+            binding.tvManageHeaderInfo.text = "门店完整数据备份（包含所有配置与历史销售流水）"
             return
         } else {
             binding.btnAddNewItem.visibility = View.VISIBLE
@@ -315,6 +315,7 @@ class ManageActivity : AppCompatActivity() {
                 textSize = 15f
                 setTextColor(Color.parseColor("#111827"))
                 setBackgroundColor(Color.parseColor("#F3F4F6"))
+                setSingleLine(true)
                 layoutParams = GridLayout.LayoutParams().apply {
                     width = 0
                     columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
@@ -334,7 +335,6 @@ class ManageActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    // 1. 菜品增改
     private fun showEditProductDialog(product: Product?) {
         tempSelectedImageUri = product?.imageUri ?: ""
 
@@ -431,7 +431,6 @@ class ManageActivity : AppCompatActivity() {
         }
     }
 
-    // 2. 分类增改
     private fun showEditCategoryDialog(cat: Category?) {
         val et = EditText(this).apply {
             hint = "分类名称 (如: 烧烤热炒、酒水饮料)"
@@ -459,7 +458,6 @@ class ManageActivity : AppCompatActivity() {
             }.setNegativeButton("取消", null).show()
     }
 
-    // 3. 员工增改
     private fun showEditStaffDialog(staff: Staff?) {
         val etName = EditText(this).apply {
             hint = "员工姓名"
@@ -499,7 +497,6 @@ class ManageActivity : AppCompatActivity() {
             }.setNegativeButton("取消", null).show()
     }
 
-    // 4. 桌台增改 (区域彩色按钮)
     private fun showEditTableDialog(table: DiningTable?) {
         val areaConfigs = listOf(
             Triple("大厅", "#E0E7FF", "#3730A3"),
@@ -585,7 +582,6 @@ class ManageActivity : AppCompatActivity() {
             }.setNegativeButton("取消", null).show()
     }
 
-    // 5. 折扣配置增改
     private fun showEditDiscountDialog(config: DiscountConfig?) {
         var selectedType = config?.type ?: "RATE"
 
@@ -648,7 +644,7 @@ class ManageActivity : AppCompatActivity() {
             }.setNegativeButton("取消", null).show()
     }
 
-    // --- 各模块适配器 ---
+    // --- 各模块列表适配器 ---
     inner class ProductListAdapter(private val list: List<Product>, private val categories: List<Category>) : RecyclerView.Adapter<ProductListAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val ivThumb: ImageView = v.findViewById(R.id.ivRowThumb)
@@ -770,7 +766,6 @@ class ManageActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: VH, position: Int) {
             val table = list[position]
-
             holder.tvTitle.text = "${table.name} 【${table.area}】"
             val statusDesc = if (table.status == "OCCUPIED") "就餐中 (消费 ￥${table.currentAmount})" else if (table.status == "RESERVED") "已预定" else "空闲"
             holder.tvSubtitle.text = "区域: ${table.area} | 建议容量: ${table.capacity}人桌 | 状态: $statusDesc"

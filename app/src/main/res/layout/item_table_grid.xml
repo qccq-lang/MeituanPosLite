@@ -98,7 +98,7 @@
             android:background="#E5E7EB"
             android:layout_marginVertical="4dp"/>
 
-        <!-- 底部：直接 3 按键直达 (开台、预定、预定点菜)，防换行排版 -->
+        <!-- 底部 3 按键：开台、预定、预点 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="38dp"
@@ -141,9 +141,9 @@
                 android:id="@+id/btnCardAction3"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1.2"
-                android:text="预定点菜"
-                android:textSize="11sp"
+                android:layout_weight="1"
+                android:text="预点"
+                android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#FFFFFF"
                 android:backgroundTint="#8B5CF6"
