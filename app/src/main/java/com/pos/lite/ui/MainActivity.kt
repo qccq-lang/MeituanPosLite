@@ -16,11 +16,16 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.pos.lite.App
 import com.pos.lite.R
-import com.pos.lite.data.*
+import com.pos.lite.data.Category
+import com.pos.lite.data.DiningTable
+import com.pos.lite.data.Order
+import com.pos.lite.data.OrderItem
+import com.pos.lite.data.Product
 import com.pos.lite.databinding.ActivityMainBinding
 import com.pos.lite.print.PosPrinterHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
@@ -31,7 +36,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val cartList = mutableListOf<CartItemModel>()
     private var selectedCategoryId: Long = -1
-    private var currentDiningTable: DiningTable? = null
+    private var currentDiningTable: DiningTable? = null // null 为快餐模式
 
     data class CartItemModel(val product: Product, var count: Int)
 
@@ -52,7 +57,13 @@ class MainActivity : AppCompatActivity() {
         binding.rvProducts.layoutManager = GridLayoutManager(this, 4)
 
         val staffName = App.currentStaff?.name ?: "未登录"
-        binding.tvCashierInfo.text = "收银员: $staffName"
+        val roleDesc = if (App.currentStaff?.role == "ADMIN") "店长" else "收银员"
+        binding.tvCashierInfo.text = "当前员工: $staffName ($roleDesc)"
+
+        // 切换堂食桌台
+        binding.btnSwitchTable.setOnClickListener {
+            showTableSelectDialog()
+        }
 
         binding.btnClearCart.setOnClickListener {
             cartList.clear()
@@ -61,7 +72,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnPay.setOnClickListener {
             if (cartList.isEmpty()) {
-                Toast.makeText(this, "购物车为空", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "购物车为空，请先选择菜品", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             showPaymentDialog()
@@ -82,6 +93,29 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun showTableSelectDialog() {
+        lifecycleScope.launch {
+            val tables = withContext(Dispatchers.IO) {
+                App.instance.database.posDao().getAllTables().first()
+            }
+            val tableNames = mutableListOf("【快餐外带】(无需桌号)")
+            tableNames.addAll(tables.map { "${it.name} (${it.capacity}人)" })
+
+            AlertDialog.Builder(this@MainActivity)
+                .setTitle("选择就餐模式 / 堂食桌台")
+                .setItems(tableNames.toTypedArray()) { _, which ->
+                    if (which == 0) {
+                        currentDiningTable = null
+                        binding.tvCurrentMode.text = "[ 快餐外带 ]"
+                    } else {
+                        val selectedTable = tables[which - 1]
+                        currentDiningTable = selectedTable
+                        binding.tvCurrentMode.text = "[ 堂食: ${selectedTable.name} ]"
+                    }
+                }.show()
+        }
+    }
+
     private fun observeCategories() {
         lifecycleScope.launch {
             App.instance.database.posDao().getAllCategories().collectLatest { categories ->
@@ -89,7 +123,9 @@ class MainActivity : AppCompatActivity() {
                     selectedCategoryId = categories[0].id
                 }
                 binding.rvCategories.adapter = CategoryTabAdapter(categories)
-                loadProducts(selectedCategoryId)
+                if (selectedCategoryId != -1L) {
+                    loadProducts(selectedCategoryId)
+                }
             }
         }
     }
@@ -125,17 +161,18 @@ class MainActivity : AppCompatActivity() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_payment, null)
         val dialog = AlertDialog.Builder(this).setView(dialogView).create()
 
-        dialogView.findViewById<TextView>(R.id.tvDialogAmount).text = String.format("应收金额: ￥%.2f", totalAmount)
+        val tableName = currentDiningTable?.name ?: "快餐"
+        dialogView.findViewById<TextView>(R.id.tvDialogAmount).text = String.format("[%s] 应收: ￥%.2f", tableName, totalAmount)
 
         val payActions = mapOf(
             R.id.btnPayCash to "现金支付",
-            R.id.btnPayWechat to "微信支付(记账)",
-            R.id.btnPayAlipay to "支付宝(记账)",
-            R.id.btnPayCard to "银行卡"
+            R.id.btnPayWechat to "微信支付",
+            R.id.btnPayAlipay to "支付宝",
+            R.id.btnPayCard to "银行卡/记账"
         )
 
         for ((btnId, payName) in payActions) {
-            dialogView.findViewById<Button>(btnId).setOnClickListener {
+            dialogView.findViewById<Button>(btnId)?.setOnClickListener {
                 completeOrder(payName, totalAmount)
                 dialog.dismiss()
             }
@@ -145,12 +182,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun completeOrder(payType: String, totalAmount: Double) {
         val orderNo = SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINA).format(Date()) + (100..999).random()
+        val tableName = currentDiningTable?.name ?: "快餐"
         val order = Order(
             orderNo = orderNo,
             totalAmount = totalAmount,
             payType = payType,
             cashierName = App.currentStaff?.name ?: "收银员",
-            tableName = currentDiningTable?.name ?: "快餐"
+            tableId = currentDiningTable?.id ?: 0,
+            tableName = tableName
         )
 
         val items = cartList.map {
@@ -166,7 +205,7 @@ class MainActivity : AppCompatActivity() {
             PosPrinterHelper.printReceipt(this@MainActivity, order, itemsWithId)
 
             withContext(Dispatchers.Main) {
-                Toast.makeText(this@MainActivity, "收款成功! 方式: $payType", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "收款成功 [$tableName] ￥$totalAmount", Toast.LENGTH_SHORT).show()
                 cartList.clear()
                 updateCartSummary()
             }
