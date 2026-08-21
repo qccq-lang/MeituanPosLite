@@ -3,9 +3,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-    android:background="#1E232F">
+    android:background="#1B202E">
 
-    <!-- 左侧系统标识 -->
+    <!-- 左侧系统标志与说明 -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
@@ -26,24 +26,24 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="纯本地单机版 | 员工交班登录"
-            android:textColor="#9E9E9E"
+            android:text="纯本地单机版 | 堂食桌台与快餐系统"
+            android:textColor="#A0A5BA"
             android:textSize="18sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="默认店长密码：888888\n默认收银员密码：1234\n(支持屏幕点击或电脑小键盘直接输入)"
-            android:textColor="#757575"
-            android:textSize="14sp"
+            android:layout_marginTop="28dp"
+            android:text="初始账号密码：\n店长 PIN: 888888\n收银员 PIN: 1234\n(支持触摸点击或电脑键盘直接输入)"
+            android:textColor="#7A819B"
+            android:textSize="15sp"
             android:gravity="center"
-            android:lineSpacingExtra="4dp"/>
+            android:lineSpacingExtra="6dp"/>
     </LinearLayout>
 
-    <!-- 右侧密码键盘区 -->
+    <!-- 右侧实体键盘区 -->
     <LinearLayout
-        android:layout_width="380dp"
+        android:layout_width="390dp"
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="vertical"
@@ -54,65 +54,57 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="请输入员工登录 PIN 码"
-            android:textColor="#222222"
+            android:textColor="#111111"
             android:textSize="20sp"
             android:textStyle="bold" />
 
-        <!-- 密码显示框 -->
         <TextView
             android:id="@+id/tvPinDisplay"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
+            android:layout_height="56dp"
             android:layout_marginTop="16dp"
-            android:background="#F2F3F5"
+            android:background="#F0F2F5"
             android:gravity="center"
-            android:hint="点击按键或键盘输入"
-            android:textColorHint="#BDBDBD"
-            android:textColor="#111111"
+            android:hint="请输入PIN码"
+            android:textColorHint="#9E9E9E"
+            android:textColor="#000000"
             android:textSize="32sp"
             android:textStyle="bold"
             android:letterSpacing="0.3" />
 
-        <!-- 3x4 实体数字键盘 -->
+        <!-- 3x4 实体高对比度按键 -->
         <GridLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:columnCount="3">
 
-            <!-- 第一排: 1, 2, 3 -->
-            <Button android:id="@+id/btn1" text="1" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:textSize="24sp" android:textColor="#222222" android:backgroundTint="#F8F9FA" android:insetTop="0dp" android:insetBottom="0dp"/>
-            <Button android:id="@+id/btn2" text="2" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:textSize="24sp" android:textColor="#222222" android:backgroundTint="#F8F9FA" android:insetTop="0dp" android:insetBottom="0dp"/>
-            <Button android:id="@+id/btn3" text="3" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:textSize="24sp" android:textColor="#222222" android:backgroundTint="#F8F9FA" android:insetTop="0dp" android:insetBottom="0dp"/>
+            <TextView android:id="@+id/btn1" text="1" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:gravity="center" android:textSize="28sp" android:textStyle="bold" android:textColor="#111111" android:background="#F5F6F8" android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/btn2" text="2" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:gravity="center" android:textSize="28sp" android:textStyle="bold" android:textColor="#111111" android:background="#F5F6F8" android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/btn3" text="3" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:gravity="center" android:textSize="28sp" android:textStyle="bold" android:textColor="#111111" android:background="#F5F6F8" android:clickable="true" android:focusable="true"/>
 
-            <!-- 第二排: 4, 5, 6 -->
-            <Button android:id="@+id/btn4" text="4" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:textSize="24sp" android:textColor="#222222" android:backgroundTint="#F8F9FA" android:insetTop="0dp" android:insetBottom="0dp"/>
-            <Button android:id="@+id/btn5" text="5" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:textSize="24sp" android:textColor="#222222" android:backgroundTint="#F8F9FA" android:insetTop="0dp" android:insetBottom="0dp"/>
-            <Button android:id="@+id/btn6" text="6" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:textSize="24sp" android:textColor="#222222" android:backgroundTint="#F8F9FA" android:insetTop="0dp" android:insetBottom="0dp"/>
+            <TextView android:id="@+id/btn4" text="4" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:gravity="center" android:textSize="28sp" android:textStyle="bold" android:textColor="#111111" android:background="#F5F6F8" android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/btn5" text="5" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:gravity="center" android:textSize="28sp" android:textStyle="bold" android:textColor="#111111" android:background="#F5F6F8" android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/btn6" text="6" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:gravity="center" android:textSize="28sp" android:textStyle="bold" android:textColor="#111111" android:background="#F5F6F8" android:clickable="true" android:focusable="true"/>
 
-            <!-- 第三排: 7, 8, 9 -->
-            <Button android:id="@+id/btn7" text="7" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:textSize="24sp" android:textColor="#222222" android:backgroundTint="#F8F9FA" android:insetTop="0dp" android:insetBottom="0dp"/>
-            <Button android:id="@+id/btn8" text="8" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:textSize="24sp" android:textColor="#222222" android:backgroundTint="#F8F9FA" android:insetTop="0dp" android:insetBottom="0dp"/>
-            <Button android:id="@+id/btn9" text="9" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:textSize="24sp" android:textColor="#222222" android:backgroundTint="#F8F9FA" android:insetTop="0dp" android:insetBottom="0dp"/>
+            <TextView android:id="@+id/btn7" text="7" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:gravity="center" android:textSize="28sp" android:textStyle="bold" android:textColor="#111111" android:background="#F5F6F8" android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/btn8" text="8" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:gravity="center" android:textSize="28sp" android:textStyle="bold" android:textColor="#111111" android:background="#F5F6F8" android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/btn9" text="9" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:gravity="center" android:textSize="28sp" android:textStyle="bold" android:textColor="#111111" android:background="#F5F6F8" android:clickable="true" android:focusable="true"/>
 
-            <!-- 第四排: 清空, 0, 删除 -->
-            <Button android:id="@+id/btnClear" text="清空" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:textSize="18sp" android:textColor="#FF3B30" android:backgroundTint="#FEECEC" android:insetTop="0dp" android:insetBottom="0dp"/>
-            <Button android:id="@+id/btn0" text="0" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:textSize="24sp" android:textColor="#222222" android:backgroundTint="#F8F9FA" android:insetTop="0dp" android:insetBottom="0dp"/>
-            <Button android:id="@+id/btnDelete" text="←" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:textSize="22sp" android:textColor="#222222" android:backgroundTint="#EAECEF" android:insetTop="0dp" android:insetBottom="0dp"/>
+            <TextView android:id="@+id/btnClear" text="清空" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:gravity="center" android:textSize="20sp" android:textStyle="bold" android:textColor="#FF3B30" android:background="#FEECEC" android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/btn0" text="0" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:gravity="center" android:textSize="28sp" android:textStyle="bold" android:textColor="#111111" android:background="#F5F6F8" android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/btnDelete" text="←" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:textColor="#111111" android:background="#E2E5EC" android:clickable="true" android:focusable="true"/>
         </GridLayout>
 
-        <!-- 登录大按钮 -->
         <Button
             android:id="@+id/btnLogin"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="20dp"
             android:text="进入系统"
             android:textStyle="bold"
             android:textSize="20sp"
             android:backgroundTint="#FFD100"
-            android:textColor="#222222"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"/>
+            android:textColor="#111111"/>
     </LinearLayout>
 </LinearLayout>
