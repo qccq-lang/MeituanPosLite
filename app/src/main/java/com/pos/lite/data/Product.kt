@@ -9,6 +9,8 @@ data class Product(
     val categoryId: Long = 0,
     val name: String,
     val price: Double,
+    val imageUri: String = "", // 菜品本地图片路径/URI
     val barcode: String = "",
-    val stock: Int = 9999
+    val stock: Int = 9999,
+    val isAvailable: Boolean = true // 是否在售
 )

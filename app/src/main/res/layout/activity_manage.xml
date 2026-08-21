@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:background="#F3F4F6">
 
-    <!-- 顶部导航与模块切换 -->
+    <!-- 顶部导航与5大子模块切换 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -20,44 +20,65 @@
             android:layout_height="38dp"
             android:text="← 返回前台"
             android:textColor="#111827"
-            android:backgroundTint="#FFC300"/>
+            android:backgroundTint="#FFC300"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
 
-        <!-- 4大管理子系统切换 -->
         <Button
             android:id="@+id/btnTabProducts"
             android:layout_width="wrap_content"
             android:layout_height="38dp"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="14dp"
             android:text="🍲 菜品管理"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#1E2433"/>
+            android:backgroundTint="#1E2433"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
 
         <Button
             android:id="@+id/btnTabCategories"
             android:layout_width="wrap_content"
             android:layout_height="38dp"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="6dp"
             android:text="📑 分类管理"
             android:textColor="#111827"
-            android:backgroundTint="#E5E7EB"/>
+            android:backgroundTint="#E5E7EB"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
 
         <Button
             android:id="@+id/btnTabStaffs"
             android:layout_width="wrap_content"
             android:layout_height="38dp"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="6dp"
             android:text="👤 员工管理"
             android:textColor="#111827"
-            android:backgroundTint="#E5E7EB"/>
+            android:backgroundTint="#E5E7EB"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
 
         <Button
             android:id="@+id/btnTabTables"
             android:layout_width="wrap_content"
             android:layout_height="38dp"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="6dp"
             android:text="🪑 桌台管理"
             android:textColor="#111827"
-            android:backgroundTint="#E5E7EB"/>
+            android:backgroundTint="#E5E7EB"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
+
+        <!-- 新增：折扣配置模块 -->
+        <Button
+            android:id="@+id/btnTabDiscounts"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginStart="6dp"
+            android:text="🏷 折扣配置"
+            android:textColor="#111827"
+            android:backgroundTint="#E5E7EB"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
 
         <View
             android:layout_width="0dp"
@@ -69,9 +90,24 @@
             android:layout_width="wrap_content"
             android:layout_height="38dp"
             android:text="➕ 新增菜品"
+            android:textStyle="bold"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#10B981"/>
+            android:backgroundTint="#10B981"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
     </LinearLayout>
+
+    <!-- 顶部状态统计栏 -->
+    <TextView
+        android:id="@+id/tvManageHeaderInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp"
+        android:text="菜品总数: 0 | 已在售: 0"
+        android:textSize="13sp"
+        android:textColor="#6B7280"
+        android:background="#FAFAFA"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvManageList"

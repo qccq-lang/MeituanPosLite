@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PosDao {
-    // 员工管理
+    // 员工
     @Query("SELECT * FROM staffs ORDER BY id ASC")
     fun getAllStaffs(): Flow<List<Staff>>
 
@@ -21,7 +21,7 @@ interface PosDao {
     @Query("DELETE FROM staffs WHERE id = :id")
     suspend fun deleteStaffById(id: Long)
 
-    // 桌台管理
+    // 桌台
     @Query("SELECT * FROM dining_tables ORDER BY id ASC")
     fun getAllTables(): Flow<List<DiningTable>>
 
@@ -37,7 +37,7 @@ interface PosDao {
     @Query("DELETE FROM dining_tables WHERE id = :id")
     suspend fun deleteTableById(id: Long)
 
-    // 分类管理
+    // 分类
     @Query("SELECT * FROM categories ORDER BY sortOrder ASC, id ASC")
     fun getAllCategories(): Flow<List<Category>>
 
@@ -50,7 +50,7 @@ interface PosDao {
     @Query("DELETE FROM categories WHERE id = :id")
     suspend fun deleteCategoryById(id: Long)
 
-    // 菜品管理
+    // 菜品
     @Query("SELECT * FROM products ORDER BY id DESC")
     fun getAllProducts(): Flow<List<Product>>
 
@@ -65,6 +65,19 @@ interface PosDao {
 
     @Query("DELETE FROM products WHERE id = :id")
     suspend fun deleteProductById(id: Long)
+
+    // 折扣配置 (常用预设)
+    @Query("SELECT * FROM discount_configs ORDER BY sortOrder ASC, id ASC")
+    fun getAllDiscountConfigs(): Flow<List<DiscountConfig>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDiscountConfig(config: DiscountConfig): Long
+
+    @Update
+    suspend fun updateDiscountConfig(config: DiscountConfig)
+
+    @Query("DELETE FROM discount_configs WHERE id = :id")
+    suspend fun deleteDiscountConfigById(id: Long)
 
     // 订单与流水
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -85,7 +98,6 @@ interface PosDao {
     @Query("SELECT * FROM order_items WHERE orderId = :orderId")
     suspend fun getOrderItems(orderId: Long): List<OrderItem>
 
-    // 报表查询
     @Query("SELECT * FROM orders WHERE status = 'PAID' AND timestamp BETWEEN :start AND :end ORDER BY timestamp DESC")
     suspend fun getPaidOrdersByRange(start: Long, end: Long): List<Order>
 }

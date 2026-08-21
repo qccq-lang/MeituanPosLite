@@ -4,16 +4,26 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
-    app:cardCornerRadius="8dp"
+    app:cardCornerRadius="10dp"
     app:cardElevation="2dp">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="72dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingHorizontal="16dp"
         android:background="#FFFFFF">
+
+        <!-- 封面缩略图 -->
+        <ImageView
+            android:id="@+id/ivRowThumb"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginEnd="12dp"
+            android:scaleType="centerCrop"
+            android:background="#F3F4F6"
+            android:visibility="gone"/>
 
         <LinearLayout
             android:layout_width="0dp"
@@ -25,7 +35,7 @@
                 android:id="@+id/tvRowTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="名称标题"
+                android:text="名称"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="#111827"/>
@@ -35,7 +45,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="单价/分类/备注信息"
+                android:text="副标题"
                 android:textSize="13sp"
                 android:textColor="#6B7280"/>
         </LinearLayout>
@@ -48,6 +58,8 @@
             android:textSize="13sp"
             android:textColor="#1E2433"
             android:backgroundTint="#E5E7EB"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
             android:layout_marginEnd="8dp"/>
 
         <Button
@@ -57,6 +69,8 @@
             android:text="删除"
             android:textSize="13sp"
             android:textColor="#EF4444"
-            android:backgroundTint="#FEE2E2"/>
+            android:backgroundTint="#FEE2E2"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
     </LinearLayout>
 </androidx.cardview.widget.CardView>
