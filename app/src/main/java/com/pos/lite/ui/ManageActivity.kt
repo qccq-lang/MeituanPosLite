@@ -26,8 +26,10 @@ import com.pos.lite.App
 import com.pos.lite.R
 import com.pos.lite.data.*
 import com.pos.lite.databinding.ActivityManageBinding
+import com.pos.lite.print.PosPrinterHelper
 import com.pos.lite.utils.ImageUtil
 import com.pos.lite.utils.LicenseGuard
+import com.pos.lite.utils.PrinterSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -40,7 +42,7 @@ import java.util.*
 class ManageActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityManageBinding
-    private var currentTab = "PRODUCTS"
+    private var currentTab = "PRODUCTS" // PRODUCTS / CATEGORIES / STAFFS / TABLES / DISCOUNTS / BACKUP
 
     private var tempSelectedImageUri: String = ""
     private var dialogPreviewImageView: ImageView? = null
@@ -162,7 +164,6 @@ class ManageActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // 埋点 5：后台管理启动校验
         if (LicenseGuard.verifyOrHalt(this)) return
 
         binding = ActivityManageBinding.inflate(layoutInflater)
@@ -178,6 +179,32 @@ class ManageActivity : AppCompatActivity() {
         binding.btnTabDiscounts.setOnClickListener { switchTab("DISCOUNTS") }
         binding.btnTabBackup.setOnClickListener { switchTab("BACKUP") }
 
+        // 默认打印与弹箱设置
+        binding.cbManageDefaultPrint.isChecked = PrinterSettings.isDefaultPrintEnabled(this)
+        binding.cbManageDefaultDrawer.isChecked = PrinterSettings.isDefaultDrawerEnabled(this)
+
+        binding.cbManageDefaultPrint.setOnCheckedChangeListener { _, isChecked ->
+            PrinterSettings.setDefaultPrintEnabled(this, isChecked)
+            Toast.makeText(this, if (isChecked) "已开启: 收款时默认勾选打印小票" else "已关闭: 收款时默认不打印小票", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.cbManageDefaultDrawer.setOnCheckedChangeListener { _, isChecked ->
+            PrinterSettings.setDefaultDrawerEnabled(this, isChecked)
+            Toast.makeText(this, if (isChecked) "已开启: 收款时默认勾选弹出钱箱" else "已关闭: 收款时默认不弹出钱箱", Toast.LENGTH_SHORT).show()
+        }
+
+        // 测试打印
+        binding.btnTestPrint.setOnClickListener {
+            val testBytes = PosPrinterHelper.buildTestReceiptBytes()
+            val printed = PosPrinterHelper.printViaUsb(this, testBytes)
+            if (printed) {
+                Toast.makeText(this, "✅ 已向 USB 打印机发送测试小票与弹钱箱指令！", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "⚠️ 未检测到 USB 打印机，请检查 USB 连接", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        // 导出与导入按键
         binding.btnExportJson.setOnClickListener {
             val defaultFileName = "pos_full_backup_" + SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA).format(Date()) + ".json"
             exportLauncher.launch(defaultFileName)
@@ -194,41 +221,6 @@ class ManageActivity : AppCompatActivity() {
                 "STAFFS" -> showEditStaffDialog(null)
                 "TABLES" -> showEditTableDialog(null)
                 "DISCOUNTS" -> showEditDiscountDialog(null)
-            }
-        }
-
-        binding.btnTestPrint.setOnClickListener {
-            val testBytes = PosPrinterHelper.buildTestReceiptBytes()
-            val printed = PosPrinterHelper.printViaUsb(this, testBytes)
-            if (printed) {
-                Toast.makeText(this, "✅ 已向 USB 打印机发送测试小票与弹钱箱指令！", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "⚠️ 未检测到已连接的 USB 打印机，请检查 USB 线或内置打印机接口", Toast.LENGTH_LONG).show()
-            }
-        }
-
-        // 1. 初始化设置状态 (默认关闭)
-        binding.cbManageDefaultPrint.isChecked = com.pos.lite.utils.PrinterSettings.isDefaultPrintEnabled(this)
-        binding.cbManageDefaultDrawer.isChecked = com.pos.lite.utils.PrinterSettings.isDefaultDrawerEnabled(this)
-
-        // 2. 监听店长修改设置
-        binding.cbManageDefaultPrint.setOnCheckedChangeListener { _, isChecked ->
-            com.pos.lite.utils.PrinterSettings.setDefaultPrintEnabled(this, isChecked)
-            Toast.makeText(this, if (isChecked) "已开启: 收款时默认勾选打印小票" else "已关闭: 收款时默认不打印小票", Toast.LENGTH_SHORT).show()
-        }
-
-        binding.cbManageDefaultDrawer.setOnCheckedChangeListener { _, isChecked ->
-            com.pos.lite.utils.PrinterSettings.setDefaultDrawerEnabled(this, isChecked)
-            Toast.makeText(this, if (isChecked) "已开启: 收款时默认勾选弹出钱箱" else "已关闭: 收款时默认不弹出钱箱", Toast.LENGTH_SHORT).show()
-        }
-
-        binding.btnTestPrint.setOnClickListener {
-            val testBytes = com.pos.lite.print.PosPrinterHelper.buildTestReceiptBytes()
-            val printed = com.pos.lite.print.PosPrinterHelper.printViaUsb(this, testBytes)
-            if (printed) {
-                Toast.makeText(this, "✅ 已向 USB 打印机发送测试小票与弹钱箱指令！", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "⚠️ 未检测到 USB 打印机，请检查 USB 连接", Toast.LENGTH_LONG).show()
             }
         }
 
@@ -278,7 +270,7 @@ class ManageActivity : AppCompatActivity() {
     private fun loadListData() {
         lifecycleScope.launch(Dispatchers.IO) {
             val dao = App.instance.database.posDao()
-            dao.removeDuplicateAdmins() // 自动去除多余店长
+            dao.removeDuplicateAdmins()
 
             when (currentTab) {
                 "PRODUCTS" -> {
@@ -682,7 +674,7 @@ class ManageActivity : AppCompatActivity() {
             }.setNegativeButton("取消", null).show()
     }
 
-    // --- 各模块适配器 ---
+    // --- 各模块列表适配器 ---
     inner class ProductListAdapter(private val list: List<Product>, private val categories: List<Category>) : RecyclerView.Adapter<ProductListAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val ivThumb: ImageView = v.findViewById(R.id.ivRowThumb)
@@ -804,7 +796,6 @@ class ManageActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: VH, position: Int) {
             val table = list[position]
-
             holder.tvTitle.text = "${table.name} 【${table.area}】"
             val statusDesc = if (table.status == "OCCUPIED") "就餐中 (消费 ￥${table.currentAmount})" else if (table.status == "RESERVED") "已预定" else "空闲"
             holder.tvSubtitle.text = "区域: ${table.area} | 建议容量: ${table.capacity}人桌 | 状态: $statusDesc"
