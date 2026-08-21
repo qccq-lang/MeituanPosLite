@@ -2,6 +2,7 @@ package com.pos.lite.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.KeyEvent
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -9,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.pos.lite.App
 import com.pos.lite.R
+import com.pos.lite.data.Staff
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -27,58 +29,113 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setupPinKeypad() {
-        val numIds = listOf(
-            R.id.btn0, R.id.btn1, R.id.btn2, R.id.btn3, R.id.btn4,
-            R.id.btn5, R.id.btn6, R.id.btn7, R.id.btn8, R.id.btn9
+        val numMap = mapOf(
+            R.id.btn0 to "0", R.id.btn1 to "1", R.id.btn2 to "2",
+            R.id.btn3 to "3", R.id.btn4 to "4", R.id.btn5 to "5",
+            R.id.btn6 to "6", R.id.btn7 to "7", R.id.btn8 to "8",
+            R.id.btn9 to "9"
         )
-        for (id in numIds) {
+
+        for ((id, num) in numMap) {
             findViewById<Button>(id).setOnClickListener {
-                if (pinBuilder.length < 8) {
-                    pinBuilder.append((it as Button).text)
-                    updatePinText()
-                }
+                appendDigit(num)
             }
         }
 
         findViewById<Button>(R.id.btnDelete).setOnClickListener {
-            if (pinBuilder.isNotEmpty()) {
-                pinBuilder.deleteCharAt(pinBuilder.length - 1)
-                updatePinText()
-            }
+            deleteDigit()
         }
 
         findViewById<Button>(R.id.btnClear).setOnClickListener {
-            pinBuilder.clear()
-            updatePinText()
+            clearDigits()
         }
 
         findViewById<Button>(R.id.btnLogin).setOnClickListener {
-            val pin = pinBuilder.toString()
-            if (pin.isEmpty()) {
-                Toast.makeText(this, "请输入PIN码", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            performLogin(pin)
+            submitLogin()
         }
     }
 
+    private fun appendDigit(d: String) {
+        if (pinBuilder.length < 8) {
+            pinBuilder.append(d)
+            updatePinText()
+        }
+    }
+
+    private fun deleteDigit() {
+        if (pinBuilder.isNotEmpty()) {
+            pinBuilder.deleteCharAt(pinBuilder.length - 1)
+            updatePinText()
+        }
+    }
+
+    private fun clearDigits() {
+        pinBuilder.clear()
+        updatePinText()
+    }
+
     private fun updatePinText() {
-        tvPinDisplay.text = "●".repeat(pinBuilder.length)
+        if (pinBuilder.isEmpty()) {
+            tvPinDisplay.text = ""
+        } else {
+            tvPinDisplay.text = "● ".repeat(pinBuilder.length).trim()
+        }
+    }
+
+    private fun submitLogin() {
+        val pin = pinBuilder.toString()
+        if (pin.isEmpty()) {
+            Toast.makeText(this, "请输入PIN码", Toast.LENGTH_SHORT).show()
+            return
+        }
+        performLogin(pin)
+    }
+
+    // 适配 WSA / 电脑物理键盘 / 收银机外接数字小键盘输入
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        when (keyCode) {
+            KeyEvent.KEYCODE_0, KeyEvent.KEYCODE_NUMPAD_0 -> appendDigit("0")
+            KeyEvent.KEYCODE_1, KeyEvent.KEYCODE_NUMPAD_1 -> appendDigit("1")
+            KeyEvent.KEYCODE_2, KeyEvent.KEYCODE_NUMPAD_2 -> appendDigit("2")
+            KeyEvent.KEYCODE_3, KeyEvent.KEYCODE_NUMPAD_3 -> appendDigit("3")
+            KeyEvent.KEYCODE_4, KeyEvent.KEYCODE_NUMPAD_4 -> appendDigit("4")
+            KeyEvent.KEYCODE_5, KeyEvent.KEYCODE_NUMPAD_5 -> appendDigit("5")
+            KeyEvent.KEYCODE_6, KeyEvent.KEYCODE_NUMPAD_6 -> appendDigit("6")
+            KeyEvent.KEYCODE_7, KeyEvent.KEYCODE_NUMPAD_7 -> appendDigit("7")
+            KeyEvent.KEYCODE_8, KeyEvent.KEYCODE_NUMPAD_8 -> appendDigit("8")
+            KeyEvent.KEYCODE_9, KeyEvent.KEYCODE_NUMPAD_9 -> appendDigit("9")
+            KeyEvent.KEYCODE_DEL -> deleteDigit()
+            KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER -> submitLogin()
+            else -> return super.onKeyDown(keyCode, event)
+        }
+        return true
     }
 
     private fun performLogin(pin: String) {
         lifecycleScope.launch(Dispatchers.IO) {
-            val staff = App.instance.database.posDao().loginWithPin(pin)
+            val dao = App.instance.database.posDao()
+            var staff = dao.loginWithPin(pin)
+
+            // 保底逻辑：如果数据库在首次初始化中还没落盘完成，提供内置管理员直通
+            if (staff == null) {
+                if (pin == "888888") {
+                    staff = Staff(name = "店长", pinCode = "888888", role = "ADMIN")
+                    dao.insertStaff(staff)
+                } else if (pin == "1234") {
+                    staff = Staff(name = "收银员01", pinCode = "1234", role = "CASHIER")
+                    dao.insertStaff(staff)
+                }
+            }
+
             withContext(Dispatchers.Main) {
                 if (staff != null) {
                     App.currentStaff = staff
-                    Toast.makeText(this@LoginActivity, "欢迎: ${staff.name}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@LoginActivity, "登录成功: ${staff.name}", Toast.LENGTH_SHORT).show()
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                     finish()
                 } else {
-                    Toast.makeText(this@LoginActivity, "PIN码错误 (初始店长:888888, 收银:1234)", Toast.LENGTH_LONG).show()
-                    pinBuilder.clear()
-                    updatePinText()
+                    Toast.makeText(this@LoginActivity, "PIN码错误 (店长:888888, 收银员:1234)", Toast.LENGTH_LONG).show()
+                    clearDigits()
                 }
             }
         }
