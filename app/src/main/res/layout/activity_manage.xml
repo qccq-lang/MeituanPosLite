@@ -3,42 +3,67 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="20dp">
+    android:background="#F5F5F5"
+    android:padding="24dp">
 
+    <!-- 顶部标题栏 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
         <Button
             android:id="@+id/btnBack"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="返回收银"/>
+            android:text="← 返回前台收银"
+            android:textColor="#222222"
+            android:backgroundTint="#FFD100"/>
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="后台管理"
-            android:textSize="20sp"
+            android:text="门店基础数据与后台管理"
+            android:textSize="22sp"
             android:textStyle="bold"
             android:gravity="center"/>
     </LinearLayout>
 
-    <LinearLayout
+    <!-- 三个管理大卡片 -->
+    <GridLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="20dp">
+        android:layout_marginTop="32dp"
+        android:columnCount="3">
+
         <Button
             android:id="@+id/btnAddCategory"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="新增商品分类"/>
+            android:layout_width="220dp"
+            android:layout_height="110dp"
+            android:layout_margin="12dp"
+            android:text="➕ 新增菜品分类"
+            android:textSize="18sp"
+            android:textColor="#222222"
+            android:backgroundTint="#FFFFFF"/>
+
+        <Button
+            android:id="@+id/btnAddProduct"
+            android:layout_width="220dp"
+            android:layout_height="110dp"
+            android:layout_margin="12dp"
+            android:text="➕ 新增商品/菜品"
+            android:textSize="18sp"
+            android:textColor="#222222"
+            android:backgroundTint="#FFFFFF"/>
+
         <Button
             android:id="@+id/btnAddStaff"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="新增员工"/>
-    </LinearLayout>
+            android:layout_width="220dp"
+            android:layout_height="110dp"
+            android:layout_margin="12dp"
+            android:text="👤 新增收银员工"
+            android:textSize="18sp"
+            android:textColor="#222222"
+            android:backgroundTint="#FFFFFF"/>
+    </GridLayout>
 </LinearLayout>
