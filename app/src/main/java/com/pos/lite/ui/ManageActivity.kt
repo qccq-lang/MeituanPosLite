@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -33,13 +34,11 @@ import kotlinx.coroutines.withContext
 class ManageActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityManageBinding
-    private var currentTab = "PRODUCTS" // PRODUCTS / CATEGORIES / STAFFS / TABLES / DISCOUNTS
+    private var currentTab = "PRODUCTS"
 
-    // 当前编辑菜品时选中的图片 URI
     private var tempSelectedImageUri: String = ""
     private var dialogPreviewImageView: ImageView? = null
 
-    // 相册选图注册器
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             tempSelectedImageUri = it.toString()
@@ -133,7 +132,7 @@ class ManageActivity : AppCompatActivity() {
                 "TABLES" -> {
                     val tables = dao.getAllTables().first()
                     withContext(Dispatchers.Main) {
-                        binding.tvManageHeaderInfo.text = "桌台总数: ${tables.size} 张 | 容纳总客量: ${tables.sumOf { it.capacity }} 人"
+                        binding.tvManageHeaderInfo.text = "桌台总数: ${tables.size} 张 (已按大厅/包厢/露台色彩分区)"
                         binding.rvManageList.adapter = TableListAdapter(tables)
                     }
                 }
@@ -148,7 +147,59 @@ class ManageActivity : AppCompatActivity() {
         }
     }
 
-    // 1. 菜品增改弹窗 (支持选图/拍照)
+    // 核心改进：选择分类彻底改用【大按钮网格矩阵】选择
+    private fun showCategoryButtonGridSelector(categories: List<Category>, onSelected: (Category) -> Unit) {
+        val dialogView = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(30, 20, 30, 20)
+        }
+
+        val tv = TextView(this).apply {
+            text = "点击下方分类按钮快速选择："
+            textSize = 14sp
+            setTextColor(Color.parseColor("#4B5563"))
+        }
+        dialogView.addView(tv)
+
+        val grid = GridLayout(this).apply {
+            columnCount = 3
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = 16
+            }
+        }
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("🏷 选择菜品所属分类")
+            .setView(dialogView)
+            .setNegativeButton("取消", null)
+            .create()
+
+        for (cat in categories) {
+            val btn = Button(this).apply {
+                text = cat.name
+                textSize = 15sp
+                setTextColor(Color.parseColor("#111827"))
+                setBackgroundColor(Color.parseColor("#F3F4F6"))
+                layoutParams = GridLayout.LayoutParams().apply {
+                    width = 0
+                    columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
+                    setMargins(6, 6, 6, 6)
+                    height = 100
+                }
+
+                setOnClickListener {
+                    onSelected(cat)
+                    dialog.dismiss()
+                }
+            }
+            grid.addView(btn)
+        }
+
+        dialogView.addView(grid)
+        dialog.show()
+    }
+
+    // 1. 菜品增改
     private fun showEditProductDialog(product: Product?) {
         tempSelectedImageUri = product?.imageUri ?: ""
 
@@ -159,11 +210,10 @@ class ManageActivity : AppCompatActivity() {
                 return@launch
             }
 
-            val catNames = categories.map { it.name }.toTypedArray()
-            var selectedIndex = if (product != null) categories.indexOfFirst { it.id == product.categoryId }.coerceAtLeast(0) else 0
+            var chosenCat = if (product != null) categories.find { it.id == product.categoryId } ?: categories[0] else categories[0]
 
             val etName = EditText(this@ManageActivity).apply {
-                hint = "菜品名称 (如: 秘制红烧肉)"
+                hint = "菜品名称"
                 setText(product?.name ?: "")
             }
             val etPrice = EditText(this@ManageActivity).apply {
@@ -171,23 +221,23 @@ class ManageActivity : AppCompatActivity() {
                 inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
                 setText(if (product != null) product.price.toString() else "")
             }
+
             val btnCat = Button(this@ManageActivity).apply {
-                text = "所属分类: " + catNames[selectedIndex]
+                text = "所属分类: " + chosenCat.name + " (点击切换)"
+                setTextColor(Color.parseColor("#1E2433"))
+                setBackgroundColor(Color.parseColor("#FEF3C7"))
             }
 
+            // 点击分类弹出大按钮矩阵选择！
             btnCat.setOnClickListener {
-                AlertDialog.Builder(this@ManageActivity)
-                    .setTitle("选择分类")
-                    .setSingleChoiceItems(catNames, selectedIndex) { d: DialogInterface, which: Int ->
-                        selectedIndex = which
-                        btnCat.text = "所属分类: " + catNames[which]
-                        d.dismiss()
-                    }.show()
+                showCategoryButtonGridSelector(categories) { selected ->
+                    chosenCat = selected
+                    btnCat.text = "所属分类: " + selected.name + " (点击切换)"
+                }
             }
 
-            // 图片预览与选择控件
             val ivPreview = ImageView(this@ManageActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 200).apply {
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 180).apply {
                     topMargin = 12
                     bottomMargin = 12
                 }
@@ -204,7 +254,7 @@ class ManageActivity : AppCompatActivity() {
             }
 
             val btnPickPhoto = Button(this@ManageActivity).apply {
-                text = "📸 从相册选择菜品封面图片"
+                text = "📸 选择/拍照菜品封面图"
                 setBackgroundColor(Color.parseColor("#E5E7EB"))
                 setTextColor(Color.parseColor("#111827"))
                 setOnClickListener {
@@ -230,7 +280,6 @@ class ManageActivity : AppCompatActivity() {
                     val price = etPrice.text.toString().trim().toDoubleOrNull() ?: 0.0
 
                     if (name.isNotEmpty() && price > 0) {
-                        val chosenCat = categories[selectedIndex]
                         lifecycleScope.launch(Dispatchers.IO) {
                             val dao = App.instance.database.posDao()
                             if (product == null) {
@@ -238,9 +287,7 @@ class ManageActivity : AppCompatActivity() {
                             } else {
                                 dao.updateProduct(product.copy(categoryId = chosenCat.id, name = name, price = price, imageUri = tempSelectedImageUri))
                             }
-                            withContext(Dispatchers.Main) {
-                                loadListData()
-                            }
+                            withContext(Dispatchers.Main) { loadListData() }
                         }
                     }
                 }
@@ -276,14 +323,14 @@ class ManageActivity : AppCompatActivity() {
             }.setNegativeButton("取消", null).show()
     }
 
-    // 3. 员工增改
+    // 3. 员工增改 (脱敏隐藏明文)
     private fun showEditStaffDialog(staff: Staff?) {
         val etName = EditText(this).apply {
-            hint = "员工姓名 (如: 张三)"
+            hint = "员工姓名"
             setText(staff?.name ?: "")
         }
         val etPin = EditText(this).apply {
-            hint = "登录PIN码 (4~6位数字)"
+            hint = "登录PIN码 (4~6位纯数字)"
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
             setText(staff?.pinCode ?: "")
         }
@@ -295,7 +342,7 @@ class ManageActivity : AppCompatActivity() {
         }
 
         AlertDialog.Builder(this)
-            .setTitle(if (staff == null) "➕ 新增收银员工" else "✏ 编辑员工信息")
+            .setTitle(if (staff == null) "➕ 新增收银员" else "✏ 修改员工信息")
             .setView(layout)
             .setPositiveButton("保存") { _, _ ->
                 val name = etName.text.toString().trim()
@@ -303,36 +350,59 @@ class ManageActivity : AppCompatActivity() {
                 if (name.isNotEmpty() && pin.length >= 4) {
                     lifecycleScope.launch(Dispatchers.IO) {
                         val dao = App.instance.database.posDao()
-                        if (staff == null) dao.insertStaff(Staff(name = name, pinCode = pin, role = "CASHIER"))
-                        else dao.updateStaff(staff.copy(name = name, pinCode = pin))
+                        if (staff == null) {
+                            dao.insertStaff(Staff(name = name, pinCode = pin, role = "CASHIER"))
+                        } else {
+                            dao.updateStaff(staff.copy(name = name, pinCode = pin))
+                        }
                         withContext(Dispatchers.Main) { loadListData() }
                     }
                 } else {
-                    Toast.makeText(this, "PIN码至少需要4位数字", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "PIN码至少4位数字", Toast.LENGTH_SHORT).show()
                 }
             }.setNegativeButton("取消", null).show()
     }
 
-    // 4. 桌台增改 (支持区域)
+    // 4. 桌台增改 (区域大按钮选择)
     private fun showEditTableDialog(table: DiningTable?) {
-        val areas = arrayOf("大厅", "包厢", "露台", "卡座")
-        var selectedAreaIdx = if (table != null) areas.indexOf(table.area).coerceAtLeast(0) else 0
+        val areas = arrayOf("大厅", "包厢", "卡座", "露台")
+        var selectedArea = table?.area ?: "大厅"
 
         val etName = EditText(this).apply {
             hint = "桌台名称 (如: A08, 包厢V8)"
             setText(table?.name ?: "")
         }
         val btnArea = Button(this).apply {
-            text = "所属区域: " + areas[selectedAreaIdx]
+            text = "所属区域: $selectedArea (点击切换)"
+            setBackgroundColor(Color.parseColor("#E0E7FF"))
+            setTextColor(Color.parseColor("#3730A3"))
         }
+
         btnArea.setOnClickListener {
-            AlertDialog.Builder(this@ManageActivity)
+            // 区域选择也用大按钮矩阵！
+            val gridView = LinearLayout(this@ManageActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setPadding(30, 20, 30, 20)
+            }
+            val areaDialog = AlertDialog.Builder(this@ManageActivity)
                 .setTitle("选择所属区域")
-                .setSingleChoiceItems(areas, selectedAreaIdx) { d, which ->
-                    selectedAreaIdx = which
-                    btnArea.text = "所属区域: " + areas[which]
-                    d.dismiss()
-                }.show()
+                .setView(gridView)
+                .setNegativeButton("取消", null)
+                .create()
+
+            for (a in areas) {
+                val b = Button(this@ManageActivity).apply {
+                    text = a
+                    layoutParams = LinearLayout.LayoutParams(0, 100, 1f).apply { marginEnd = 6 }
+                    setOnClickListener {
+                        selectedArea = a
+                        btnArea.text = "所属区域: $a (点击切换)"
+                        areaDialog.dismiss()
+                    }
+                }
+                gridView.addView(b)
+            }
+            areaDialog.show()
         }
 
         val etCapacity = EditText(this).apply {
@@ -357,63 +427,76 @@ class ManageActivity : AppCompatActivity() {
                 if (name.isNotEmpty()) {
                     lifecycleScope.launch(Dispatchers.IO) {
                         val dao = App.instance.database.posDao()
-                        if (table == null) dao.insertTable(DiningTable(name = name, area = areas[selectedAreaIdx], capacity = cap))
-                        else dao.updateTable(table.copy(name = name, area = areas[selectedAreaIdx], capacity = cap))
+                        if (table == null) dao.insertTable(DiningTable(name = name, area = selectedArea, capacity = cap))
+                        else dao.updateTable(table.copy(name = name, area = selectedArea, capacity = cap))
                         withContext(Dispatchers.Main) { loadListData() }
                     }
                 }
             }.setNegativeButton("取消", null).show()
     }
 
-    // 5. 新增：折扣快捷按键配置增改
+    // 5. 折扣配置增改
     private fun showEditDiscountDialog(config: DiscountConfig?) {
-        val types = arrayOf("比例打折 (如9折填0.9)", "固定立减 (如减10元填10)", "自动抹零")
-        var selectedTypeIdx = if (config?.type == "DEDUCT") 1 else if (config?.type == "MOLING") 2 else 0
+        var selectedType = config?.type ?: "RATE"
 
         val etName = EditText(this).apply {
             hint = "按键名称 (如: 9折, 88折, 减5元, 抹零)"
             setText(config?.name ?: "")
         }
-        val btnType = Button(this).apply {
-            text = "折扣类型: " + types[selectedTypeIdx]
+
+        val typeButtons = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, 10, 0, 10)
         }
+
+        val btnRate = Button(this).apply { text = "比例打折"; layoutParams = LinearLayout.LayoutParams(0, 90, 1f) }
+        val btnDeduct = Button(this).apply { text = "固定立减"; layoutParams = LinearLayout.LayoutParams(0, 90, 1f) }
+        val btnMoling = Button(this).apply { text = "自动抹零"; layoutParams = LinearLayout.LayoutParams(0, 90, 1f) }
+
+        fun updateTypeBtnStyles() {
+            btnRate.setBackgroundColor(if (selectedType == "RATE") Color.parseColor("#1E2433") else Color.parseColor("#E5E7EB"))
+            btnRate.setTextColor(if (selectedType == "RATE") Color.WHITE else Color.parseColor("#111827"))
+            btnDeduct.setBackgroundColor(if (selectedType == "DEDUCT") Color.parseColor("#1E2433") else Color.parseColor("#E5E7EB"))
+            btnDeduct.setTextColor(if (selectedType == "DEDUCT") Color.WHITE else Color.parseColor("#111827"))
+            btnMoling.setBackgroundColor(if (selectedType == "MOLING") Color.parseColor("#1E2433") else Color.parseColor("#E5E7EB"))
+            btnMoling.setTextColor(if (selectedType == "MOLING") Color.WHITE else Color.parseColor("#111827"))
+        }
+        updateTypeBtnStyles()
+
+        btnRate.setOnClickListener { selectedType = "RATE"; updateTypeBtnStyles() }
+        btnDeduct.setOnClickListener { selectedType = "DEDUCT"; updateTypeBtnStyles() }
+        btnMoling.setOnClickListener { selectedType = "MOLING"; updateTypeBtnStyles() }
+
+        typeButtons.addView(btnRate)
+        typeButtons.addView(btnDeduct)
+        typeButtons.addView(btnMoling)
+
         val etValue = EditText(this).apply {
-            hint = "数值 (如: 0.9 或 10, 抹零可填0)"
+            hint = "数值 (如: 0.9 或 10, 抹零填0)"
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
             setText(if (config != null) config.value.toString() else "")
         }
 
-        btnType.setOnClickListener {
-            AlertDialog.Builder(this@ManageActivity)
-                .setTitle("选择类型")
-                .setSingleChoiceItems(types, selectedTypeIdx) { d, which ->
-                    selectedTypeIdx = which
-                    btnType.text = "折扣类型: " + types[which]
-                    d.dismiss()
-                }.show()
-        }
-
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(50, 40, 50, 20)
+            setPadding(50, 30, 50, 20)
             addView(etName)
-            addView(btnType)
+            addView(typeButtons)
             addView(etValue)
         }
 
         AlertDialog.Builder(this)
-            .setTitle(if (config == null) "➕ 新增常用折扣按键" else "✏ 编辑折扣按键")
+            .setTitle(if (config == null) "➕ 新增快捷折扣按键" else "✏ 编辑折扣按键")
             .setView(layout)
             .setPositiveButton("保存") { _, _ ->
                 val name = etName.text.toString().trim()
                 val value = etValue.text.toString().trim().toDoubleOrNull() ?: 0.0
-                val typeKey = if (selectedTypeIdx == 1) "DEDUCT" else if (selectedTypeIdx == 2) "MOLING" else "RATE"
 
                 if (name.isNotEmpty()) {
                     lifecycleScope.launch(Dispatchers.IO) {
                         val dao = App.instance.database.posDao()
-                        if (config == null) dao.insertDiscountConfig(DiscountConfig(name = name, type = typeKey, value = value))
-                        else dao.updateDiscountConfig(config.copy(name = name, type = typeKey, value = value))
+                        if (config == null) dao.insertDiscountConfig(DiscountConfig(name = name, type = selectedType, value = value))
+                        else dao.updateDiscountConfig(config.copy(name = name, type = selectedType, value = value))
                         withContext(Dispatchers.Main) { loadListData() }
                     }
                 }
@@ -492,6 +575,7 @@ class ManageActivity : AppCompatActivity() {
         override fun getItemCount() = list.size
     }
 
+    // 员工管理：密码脱敏
     inner class StaffListAdapter(private val list: List<Staff>) : RecyclerView.Adapter<StaffListAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val tvTitle: TextView = v.findViewById(R.id.tvRowTitle)
@@ -504,11 +588,13 @@ class ManageActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: VH, position: Int) {
             val staff = list[position]
-            holder.tvTitle.text = staff.name + (if (staff.role == "ADMIN") " (店长·管理员)" else " (收银员)")
-            holder.tvSubtitle.text = "PIN登录密码: ${staff.pinCode}"
+            holder.tvTitle.text = staff.name + (if (staff.role == "ADMIN") " (店长·唯一管理账号)" else " (收银员)")
+            // 核心脱敏：使用黑点掩码，不再明文展示
+            val maskedPin = "●".repeat(staff.pinCode.length.coerceAtLeast(4))
+            holder.tvSubtitle.text = "登录PIN密码: $maskedPin (已安全加密)"
 
             if (staff.role == "ADMIN") {
-                holder.btnDelete.visibility = View.GONE
+                holder.btnDelete.visibility = View.GONE // 店长不可被删除
             } else {
                 holder.btnDelete.visibility = View.VISIBLE
             }
@@ -529,6 +615,7 @@ class ManageActivity : AppCompatActivity() {
         override fun getItemCount() = list.size
     }
 
+    // 桌台管理：色彩与区域聚类展示
     inner class TableListAdapter(private val list: List<DiningTable>) : RecyclerView.Adapter<TableListAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val tvTitle: TextView = v.findViewById(R.id.tvRowTitle)
@@ -541,8 +628,8 @@ class ManageActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: VH, position: Int) {
             val table = list[position]
-            holder.tvTitle.text = "${table.name} (${table.area})"
-            holder.tvSubtitle.text = "容纳: ${table.capacity}人桌 | 状态: ${if(table.status=="OCCUPIED")"就餐中" else if(table.status=="RESERVED")"已预定" else "空闲"}"
+            holder.tvTitle.text = "${table.name} [${table.area}]"
+            holder.tvSubtitle.text = "区域: ${table.area} | 建议客容量: ${table.capacity}人 | 状态: ${if(table.status=="OCCUPIED")"就餐中" else if(table.status=="RESERVED")"已预定" else "空闲"}"
 
             holder.btnEdit.setOnClickListener { showEditTableDialog(table) }
             holder.btnDelete.setOnClickListener {
@@ -584,7 +671,7 @@ class ManageActivity : AppCompatActivity() {
             holder.btnDelete.setOnClickListener {
                 AlertDialog.Builder(this@ManageActivity)
                     .setTitle("确认删除")
-                    .setMessage("确定删除快捷折扣【${cfg.name}】吗？")
+                    .setMessage("确定删除快捷折扣按键【${cfg.name}】吗？")
                     .setPositiveButton("删除") { _, _ ->
                         lifecycleScope.launch(Dispatchers.IO) {
                             App.instance.database.posDao().deleteDiscountConfigById(cfg.id)

@@ -6,11 +6,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface PosDao {
     // 员工
-    @Query("SELECT * FROM staffs ORDER BY id ASC")
+    @Query("SELECT * FROM staffs ORDER BY role DESC, id ASC")
     fun getAllStaffs(): Flow<List<Staff>>
 
     @Query("SELECT * FROM staffs WHERE pinCode = :pin LIMIT 1")
     suspend fun loginWithPin(pin: String): Staff?
+
+    @Query("SELECT COUNT(*) FROM staffs WHERE role = 'ADMIN'")
+    suspend fun getAdminCount(): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStaff(staff: Staff): Long
@@ -21,8 +24,8 @@ interface PosDao {
     @Query("DELETE FROM staffs WHERE id = :id")
     suspend fun deleteStaffById(id: Long)
 
-    // 桌台
-    @Query("SELECT * FROM dining_tables ORDER BY id ASC")
+    // 桌台 (按区域聚类分组排序)
+    @Query("SELECT * FROM dining_tables ORDER BY area ASC, name ASC, id ASC")
     fun getAllTables(): Flow<List<DiningTable>>
 
     @Query("SELECT * FROM dining_tables WHERE id = :id")
@@ -66,9 +69,12 @@ interface PosDao {
     @Query("DELETE FROM products WHERE id = :id")
     suspend fun deleteProductById(id: Long)
 
-    // 折扣配置 (常用预设)
+    // 快捷折扣配置
     @Query("SELECT * FROM discount_configs ORDER BY sortOrder ASC, id ASC")
     fun getAllDiscountConfigs(): Flow<List<DiscountConfig>>
+
+    @Query("SELECT * FROM discount_configs ORDER BY sortOrder ASC, id ASC")
+    suspend fun getDiscountConfigsList(): List<DiscountConfig>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDiscountConfig(config: DiscountConfig): Long

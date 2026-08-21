@@ -13,6 +13,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.GridLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -26,6 +28,7 @@ import com.pos.lite.R
 import com.pos.lite.data.*
 import com.pos.lite.databinding.ActivityMainBinding
 import com.pos.lite.print.PosPrinterHelper
+import com.pos.lite.utils.ImageUtil
 import com.pos.lite.utils.PinyinUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -40,9 +43,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val cartList = mutableListOf<CartItemModel>()
 
-    // 全部菜品池与搜索过滤
     private var allProductsList = listOf<Product>()
-    private var selectedCategoryId: Long = -1L // -1 代表【全部】
+    private var selectedCategoryId: Long = -1L
     private var searchKeyword: String = ""
 
     private var activeTable: DiningTable? = null
@@ -100,13 +102,11 @@ class MainActivity : AppCompatActivity() {
         binding.rvCategories.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.rvProducts.layoutManager = GridLayoutManager(this, 4)
 
-        // 导航模式切换
         binding.btnNavTables.setOnClickListener { showTableView() }
         binding.btnNavFastFood.setOnClickListener { openFastFoodOrder() }
         binding.btnBackToTables.setOnClickListener { showTableView() }
         updateNavModeButtons(isTableMode = true)
 
-        // 菜品搜索监听 (中文 + 拼音首字母)
         binding.etSearchDish.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -117,9 +117,7 @@ class MainActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        binding.btnClearSearch.setOnClickListener {
-            binding.etSearchDish.setText("")
-        }
+        binding.btnClearSearch.setOnClickListener { binding.etSearchDish.setText("") }
 
         binding.btnClearCart.setOnClickListener {
             cartList.clear()
@@ -127,12 +125,13 @@ class MainActivity : AppCompatActivity() {
             updateCartSummary()
         }
 
+        // 整单打折大按钮矩阵
         binding.btnWholeDiscount.setOnClickListener {
             if (cartList.isEmpty()) {
                 Toast.makeText(this, "购物车为空，无法打折", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            showWholeDiscountDialog()
+            showDiscountButtonGridDialog(isWholeOrder = true, targetItem = null)
         }
 
         binding.btnSaveTableOrder.setOnClickListener {
@@ -164,7 +163,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 修复模式切换按钮配色 BUG (彻底解决黑底黑字和文字丢失)
     private fun updateNavModeButtons(isTableMode: Boolean) {
         if (isTableMode) {
             binding.btnNavTables.setBackgroundColor(Color.parseColor("#1E2433"))
@@ -208,85 +206,126 @@ class MainActivity : AppCompatActivity() {
         wholeDiscountNote = ""
     }
 
-    private fun showWholeDiscountDialog() {
-        val options = arrayOf("全单 95 折", "全单 9 折", "全单 88 折", "全单 85 折", "全单 8 折", "自定义打折/立减", "恢复原价 (无折扣)")
-        AlertDialog.Builder(this)
-            .setTitle("选择整单优惠方式")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> setWholeDiscount(0.95, 0.0, "全单95折")
-                    1 -> setWholeDiscount(0.90, 0.0, "全单9折")
-                    2 -> setWholeDiscount(0.88, 0.0, "全单88折")
-                    3 -> setWholeDiscount(0.85, 0.0, "全单85折")
-                    4 -> setWholeDiscount(0.80, 0.0, "全单8折")
-                    5 -> showCustomWholeDiscountDialog()
-                    6 -> resetWholeDiscount()
-                }
-                updateCartSummary()
-            }.show()
-    }
+    // 核心改进：纯大按钮网格打折弹窗 (100% 动态加载 DB 折扣，带保底预设)
+    private fun showDiscountButtonGridDialog(isWholeOrder: Boolean, targetItem: CartItemModel?) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val dao = App.instance.database.posDao()
+            var configs = dao.getDiscountConfigsList()
 
-    private fun setWholeDiscount(rate: Double, deduct: Double, note: String) {
-        wholeDiscountRate = rate
-        wholeDiscountDeduct = deduct
-        wholeDiscountNote = note
-    }
-
-    private fun showCustomWholeDiscountDialog() {
-        val etRate = EditText(this).apply {
-            hint = "打折比例 (如: 0.88 表示88折, 留空不打折)"
-            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
-        }
-        val etDeduct = EditText(this).apply {
-            hint = "立减/抹零金额 (元，如: 10)"
-            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
-        }
-        val layout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(50, 40, 50, 20)
-            addView(etRate)
-            addView(etDeduct)
-        }
-
-        AlertDialog.Builder(this)
-            .setTitle("自定义整单打折与立减")
-            .setView(layout)
-            .setPositiveButton("应用") { _, _ ->
-                val rateInput = etRate.text.toString().trim().toDoubleOrNull()
-                val deductInput = etDeduct.text.toString().trim().toDoubleOrNull() ?: 0.0
-
-                val rate = if (rateInput != null && rateInput in 0.01..1.0) rateInput else 1.0
-                var note = ""
-                if (rate < 1.0) note += "${(rate * 10).toInt()}折 "
-                if (deductInput > 0) note += "立减￥$deductInput"
-
-                setWholeDiscount(rate, deductInput, note)
-                updateCartSummary()
+            // 保底机制：若数据库首次未就绪，自动填补默认按键
+            if (configs.isEmpty()) {
+                configs = listOf(
+                    DiscountConfig(name = "95折", type = "RATE", value = 0.95),
+                    DiscountConfig(name = "9折", type = "RATE", value = 0.90),
+                    DiscountConfig(name = "88折", type = "RATE", value = 0.88),
+                    DiscountConfig(name = "85折", type = "RATE", value = 0.85),
+                    DiscountConfig(name = "8折", type = "RATE", value = 0.80),
+                    DiscountConfig(name = "75折", type = "RATE", value = 0.75),
+                    DiscountConfig(name = "立减￥5", type = "DEDUCT", value = 5.0),
+                    DiscountConfig(name = "立减￥10", type = "DEDUCT", value = 10.0),
+                    DiscountConfig(name = "立减￥20", type = "DEDUCT", value = 20.0),
+                    DiscountConfig(name = "自动抹零", type = "MOLING", value = 0.0)
+                )
             }
-            .setNegativeButton("取消", null)
-            .show()
-    }
 
-    private fun showItemDiscountDialog(item: CartItemModel) {
-        val options = arrayOf("单品 9 折", "单品 85 折", "单品 8 折", "单品半价 (5折)", "单品立减金额...", "恢复单品原价")
-        AlertDialog.Builder(this)
-            .setTitle("【${item.product.name}】单品优惠")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> { item.discountRate = 0.9; item.deductAmount = 0.0; item.discountNote = "9折" }
-                    1 -> { item.discountRate = 0.85; item.deductAmount = 0.0; item.discountNote = "85折" }
-                    2 -> { item.discountRate = 0.8; item.deductAmount = 0.0; item.discountNote = "8折" }
-                    3 -> { item.discountRate = 0.5; item.deductAmount = 0.0; item.discountNote = "半价" }
-                    4 -> showCustomItemDeductDialog(item)
-                    5 -> { item.discountRate = 1.0; item.deductAmount = 0.0; item.discountNote = "" }
+            withContext(Dispatchers.Main) {
+                val dialogView = LinearLayout(this@MainActivity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(40, 24, 40, 24)
                 }
-                updateCartSummary()
-            }.show()
+
+                val title = if (isWholeOrder) "🏷 选择整单优惠打折" else "🏷 【${targetItem?.product?.name}】单品优惠"
+                val tvTip = TextView(this@MainActivity).apply {
+                    text = "点击下方快捷按钮立即应用优惠折扣："
+                    textSize = 14sp
+                    setTextColor(Color.parseColor("#4B5563"))
+                }
+                dialogView.addView(tvTip)
+
+                // 4列大按钮网格
+                val grid = GridLayout(this@MainActivity).apply {
+                    columnCount = 3
+                    layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                        topMargin = 16
+                        bottomMargin = 16
+                    }
+                }
+
+                val dialog = AlertDialog.Builder(this@MainActivity)
+                    .setTitle(title)
+                    .setView(dialogView)
+                    .setNegativeButton("关闭", null)
+                    .create()
+
+                for (cfg in configs) {
+                    val btn = Button(this@MainActivity).apply {
+                        text = cfg.name
+                        textSize = 15sp
+                        setTextColor(Color.parseColor("#1E2433"))
+                        setBackgroundColor(Color.parseColor("#F3F4F6"))
+                        layoutParams = GridLayout.LayoutParams().apply {
+                            width = 0
+                            columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
+                            setMargins(8, 8, 8, 8)
+                            height = 110
+                        }
+
+                        setOnClickListener {
+                            applyDiscountConfig(cfg, isWholeOrder, targetItem)
+                            dialog.dismiss()
+                        }
+                    }
+                    grid.addView(btn)
+                }
+                dialogView.addView(grid)
+
+                // 底部操作：自定义立减与恢复原价
+                val bottomActions = LinearLayout(this@MainActivity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                }
+
+                val btnCustom = Button(this@MainActivity).apply {
+                    text = "✏ 自定义减免..."
+                    textSize = 13sp
+                    setTextColor(Color.parseColor("#2563EB"))
+                    setBackgroundColor(Color.parseColor("#EFF6FF"))
+                    layoutParams = LinearLayout.LayoutParams(0, 100, 1f).apply { marginEnd = 8 }
+                    setOnClickListener {
+                        dialog.dismiss()
+                        showCustomInputDiscountDialog(isWholeOrder, targetItem)
+                    }
+                }
+
+                val btnReset = Button(this@MainActivity).apply {
+                    text = "🔄 恢复原价"
+                    textSize = 13sp
+                    setTextColor(Color.parseColor("#EF4444"))
+                    setBackgroundColor(Color.parseColor("#FEE2E2"))
+                    layoutParams = LinearLayout.LayoutParams(0, 100, 1f)
+                    setOnClickListener {
+                        if (isWholeOrder) resetWholeDiscount()
+                        else {
+                            targetItem?.discountRate = 1.0
+                            targetItem?.deductAmount = 0.0
+                            targetItem?.discountNote = ""
+                        }
+                        updateCartSummary()
+                        dialog.dismiss()
+                    }
+                }
+
+                bottomActions.addView(btnCustom)
+                bottomActions.addView(btnReset)
+                dialogView.addView(bottomActions)
+
+                dialog.show()
+            }
+        }
     }
 
-    private fun showCustomItemDeductDialog(item: CartItemModel) {
+    private fun showCustomInputDiscountDialog(isWholeOrder: Boolean, targetItem: CartItemModel?) {
         val et = EditText(this).apply {
-            hint = "每件立减金额 (元，例如: 5)"
+            hint = "输入立减金额 (元，例如: 15)"
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
         }
         val layout = LinearLayout(this).apply {
@@ -295,17 +334,71 @@ class MainActivity : AppCompatActivity() {
             addView(et)
         }
         AlertDialog.Builder(this)
-            .setTitle("【${item.product.name}】单品立减")
+            .setTitle(if (isWholeOrder) "自定义整单立减" else "【${targetItem?.product?.name}】单品立减")
             .setView(layout)
             .setPositiveButton("确定") { _, _ ->
                 val deduct = et.text.toString().trim().toDoubleOrNull() ?: 0.0
                 if (deduct > 0) {
-                    item.discountRate = 1.0
-                    item.deductAmount = deduct
-                    item.discountNote = "减￥$deduct"
+                    if (isWholeOrder) {
+                        wholeDiscountRate = 1.0
+                        wholeDiscountDeduct = deduct
+                        wholeDiscountNote = "立减￥$deduct"
+                    } else {
+                        targetItem?.discountRate = 1.0
+                        targetItem?.deductAmount = deduct
+                        targetItem?.discountNote = "减￥$deduct"
+                    }
+                    updateCartSummary()
                 }
-                updateCartSummary()
             }.setNegativeButton("取消", null).show()
+    }
+
+    private fun applyDiscountConfig(cfg: DiscountConfig, isWholeOrder: Boolean, targetItem: CartItemModel?) {
+        if (isWholeOrder) {
+            when (cfg.type) {
+                "RATE" -> {
+                    wholeDiscountRate = cfg.value
+                    wholeDiscountDeduct = 0.0
+                    wholeDiscountNote = cfg.name
+                }
+                "DEDUCT" -> {
+                    wholeDiscountRate = 1.0
+                    wholeDiscountDeduct = cfg.value
+                    wholeDiscountNote = cfg.name
+                }
+                "MOLING" -> {
+                    val rawSum = cartList.sumOf { it.subtotal }
+                    val intPart = rawSum.toInt().toDouble()
+                    val diff = rawSum - intPart
+                    wholeDiscountRate = 1.0
+                    wholeDiscountDeduct = diff
+                    wholeDiscountNote = "自动抹零"
+                }
+            }
+        } else {
+            targetItem?.let {
+                when (cfg.type) {
+                    "RATE" -> {
+                        it.discountRate = cfg.value
+                        it.deductAmount = 0.0
+                        it.discountNote = cfg.name
+                    }
+                    "DEDUCT" -> {
+                        it.discountRate = 1.0
+                        it.deductAmount = cfg.value
+                        it.discountNote = cfg.name
+                    }
+                    "MOLING" -> {
+                        val singleRaw = it.product.price
+                        val diff = singleRaw - singleRaw.toInt().toDouble()
+                        it.discountRate = 1.0
+                        it.deductAmount = diff
+                        it.discountNote = "抹零"
+                    }
+                }
+            }
+        }
+        updateCartSummary()
     }
 
     private fun observeTables() {
@@ -322,7 +415,7 @@ class MainActivity : AppCompatActivity() {
         cartList.clear()
         resetWholeDiscount()
         updateCartSummary()
-        binding.tvOrderTableTitle.text = "桌台: ${table.name} (新开台)"
+        binding.tvOrderTableTitle.text = "桌台: ${table.name} (${table.area})"
         binding.btnSaveTableOrder.visibility = View.VISIBLE
         binding.btnSaveTableOrder.text = "下单挂单"
         binding.layoutTableOverview.visibility = View.GONE
@@ -510,7 +603,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 观察分类数据 (注入【全部】选项)
     private fun observeCategories() {
         lifecycleScope.launch {
             App.instance.database.posDao().getAllCategories().collectLatest { categories ->
@@ -521,7 +613,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 观察所有菜品
     private fun observeProducts() {
         lifecycleScope.launch {
             App.instance.database.posDao().getAllProducts().collectLatest { products ->
@@ -531,16 +622,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 核心过滤引擎：按分类 + 中文/拼音首字母实时过滤
     private fun applyProductFilter() {
         var result = allProductsList
 
-        // 1. 分类过滤
         if (selectedCategoryId != -1L) {
             result = result.filter { it.categoryId == selectedCategoryId }
         }
-
-        // 2. 拼音首字母 / 中文字符过滤
         if (searchKeyword.isNotEmpty()) {
             result = result.filter { PinyinUtil.matches(it.name, searchKeyword) }
         }
@@ -579,7 +666,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- 适配器 ---
+    // --- 桌台大厅卡片适配器 (带色彩分区) ---
     inner class TableGridAdapter(private val list: List<DiningTable>) : RecyclerView.Adapter<TableGridAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val root: View = v.findViewById(R.id.layoutCardRoot)
@@ -599,7 +686,7 @@ class MainActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: VH, position: Int) {
             val table = list[position]
             holder.tvName.text = table.name
-            holder.tvCapacity.text = "(${table.capacity}人桌)"
+            holder.tvCapacity.text = "[${table.area}] ${table.capacity}人"
 
             when (table.status) {
                 "OCCUPIED" -> {
@@ -655,11 +742,17 @@ class MainActivity : AppCompatActivity() {
                     }
                     holder.btnAction3.visibility = View.GONE
                 }
-                else -> { // 空闲
-                    holder.root.setBackgroundColor(Color.parseColor("#E6F9F0"))
+                else -> { // 空闲 (按区域色彩渲染)
+                    val areaBgColor = when (table.area) {
+                        "包厢" -> "#FEF9C3" // 琥珀金
+                        "卡座" -> "#FCE7F3" // 柔粉
+                        "露台" -> "#CCFBF1" // 湖蓝绿
+                        else -> "#E6F9F0"   // 大厅清新绿
+                    }
+                    holder.root.setBackgroundColor(Color.parseColor(areaBgColor))
                     holder.tvStatusBadge.text = "🟢 空闲"
                     holder.tvStatusBadge.setTextColor(Color.parseColor("#059669"))
-                    holder.tvTableInfo.text = "桌位空闲"
+                    holder.tvTableInfo.text = "桌位就绪，可点单"
                     holder.tvTableAmount.visibility = View.GONE
 
                     holder.btnAction1.text = "🍽 开台点餐"
@@ -681,7 +774,6 @@ class MainActivity : AppCompatActivity() {
         override fun getItemCount() = list.size
     }
 
-    // 胶囊分类选项卡 (支持【全部】与高亮选中)
     inner class CategoryTabAdapter(private val list: List<Category>) : RecyclerView.Adapter<CategoryTabAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val root: View = v.findViewById(R.id.layoutCategoryRoot)
@@ -712,11 +804,11 @@ class MainActivity : AppCompatActivity() {
         override fun getItemCount() = list.size
     }
 
-    // 菜品卡片适配器
     inner class ProductGridAdapter(private val list: List<Product>) : RecyclerView.Adapter<ProductGridAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val tvName: TextView = v.findViewById(R.id.tvProductName)
             val tvPrice: TextView = v.findViewById(R.id.tvProductPrice)
+            val ivThumb: ImageView = v.findViewById(R.id.ivProductThumb)
         }
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
             VH(LayoutInflater.from(parent.context).inflate(R.layout.item_product, parent, false))
@@ -725,6 +817,14 @@ class MainActivity : AppCompatActivity() {
             val p = list[position]
             holder.tvName.text = p.name
             holder.tvPrice.text = String.format("￥%.2f", p.price)
+
+            if (p.imageUri.isNotEmpty()) {
+                holder.ivThumb.visibility = View.VISIBLE
+                ImageUtil.loadSafeImage(this@MainActivity, p.imageUri, holder.ivThumb)
+            } else {
+                holder.ivThumb.visibility = View.GONE
+            }
+
             holder.itemView.setOnClickListener { addToCart(p) }
         }
         override fun getItemCount() = list.size
@@ -751,12 +851,14 @@ class MainActivity : AppCompatActivity() {
 
             if (item.discountNote.isNotEmpty()) {
                 holder.tvDiscountNote.visibility = View.VISIBLE
-                holder.tvDiscountNote.text = "单品优惠: ${item.discountNote}"
+                holder.tvDiscountNote.text = "优惠: ${item.discountNote}"
             } else {
                 holder.tvDiscountNote.visibility = View.GONE
             }
 
-            holder.tvDiscountBtn.setOnClickListener { showItemDiscountDialog(item) }
+            holder.tvDiscountBtn.setOnClickListener {
+                showDiscountButtonGridDialog(isWholeOrder = false, targetItem = item)
+            }
 
             holder.btnPlus.setOnClickListener {
                 item.count++
