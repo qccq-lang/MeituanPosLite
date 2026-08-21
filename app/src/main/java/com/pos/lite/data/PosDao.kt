@@ -28,12 +28,16 @@ interface PosDao {
     @Update
     suspend fun updateTable(table: DiningTable)
 
-    // 菜品与分类
+    // 分类
     @Query("SELECT * FROM categories ORDER BY sortOrder ASC, id ASC")
     fun getAllCategories(): Flow<List<Category>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCategory(category: Category): Long
+
+    // 商品/菜品
+    @Query("SELECT * FROM products")
+    fun getAllProducts(): Flow<List<Product>>
 
     @Query("SELECT * FROM products WHERE categoryId = :catId")
     fun getProductsByCategory(catId: Long): Flow<List<Product>>
@@ -41,7 +45,7 @@ interface PosDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertProduct(product: Product): Long
 
-    // 订单与明细 (挂单/结账)
+    // 订单与挂单明细
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrder(order: Order): Long
 
