@@ -197,6 +197,41 @@ class ManageActivity : AppCompatActivity() {
             }
         }
 
+        binding.btnTestPrint.setOnClickListener {
+            val testBytes = PosPrinterHelper.buildTestReceiptBytes()
+            val printed = PosPrinterHelper.printViaUsb(this, testBytes)
+            if (printed) {
+                Toast.makeText(this, "✅ 已向 USB 打印机发送测试小票与弹钱箱指令！", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "⚠️ 未检测到已连接的 USB 打印机，请检查 USB 线或内置打印机接口", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        // 1. 初始化设置状态 (默认关闭)
+        binding.cbManageDefaultPrint.isChecked = com.pos.lite.utils.PrinterSettings.isDefaultPrintEnabled(this)
+        binding.cbManageDefaultDrawer.isChecked = com.pos.lite.utils.PrinterSettings.isDefaultDrawerEnabled(this)
+
+        // 2. 监听店长修改设置
+        binding.cbManageDefaultPrint.setOnCheckedChangeListener { _, isChecked ->
+            com.pos.lite.utils.PrinterSettings.setDefaultPrintEnabled(this, isChecked)
+            Toast.makeText(this, if (isChecked) "已开启: 收款时默认勾选打印小票" else "已关闭: 收款时默认不打印小票", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.cbManageDefaultDrawer.setOnCheckedChangeListener { _, isChecked ->
+            com.pos.lite.utils.PrinterSettings.setDefaultDrawerEnabled(this, isChecked)
+            Toast.makeText(this, if (isChecked) "已开启: 收款时默认勾选弹出钱箱" else "已关闭: 收款时默认不弹出钱箱", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.btnTestPrint.setOnClickListener {
+            val testBytes = com.pos.lite.print.PosPrinterHelper.buildTestReceiptBytes()
+            val printed = com.pos.lite.print.PosPrinterHelper.printViaUsb(this, testBytes)
+            if (printed) {
+                Toast.makeText(this, "✅ 已向 USB 打印机发送测试小票与弹钱箱指令！", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "⚠️ 未检测到 USB 打印机，请检查 USB 连接", Toast.LENGTH_LONG).show()
+            }
+        }
+
         switchTab("PRODUCTS")
     }
 

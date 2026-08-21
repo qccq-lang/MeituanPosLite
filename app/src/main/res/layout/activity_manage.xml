@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:background="#F3F4F6">
 
-    <!-- 顶部导航与模块切换 -->
+    <!-- 顶部导航栏 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -85,13 +85,12 @@
             android:insetBottom="0dp"
             android:singleLine="true"/>
 
-        <!-- 数据备份与恢复模块 -->
         <Button
             android:id="@+id/btnTabBackup"
             android:layout_width="wrap_content"
             android:layout_height="38dp"
             android:layout_marginStart="6dp"
-            android:text="💾 备份/恢复"
+            android:text="⚙ 外设/备份"
             android:textColor="#111827"
             android:backgroundTint="#E5E7EB"
             android:insetTop="0dp"
@@ -128,7 +127,6 @@
         android:background="#FAFAFA"
         android:singleLine="true"/>
 
-    <!-- 列表展示区域 -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvManageList"
         android:layout_width="match_parent"
@@ -136,64 +134,161 @@
         android:padding="16dp"
         android:visibility="visible"/>
 
-    <!-- 备份/恢复专有面板 -->
-    <LinearLayout
+    <!-- 外设打印偏好设置 & 全量备份恢复面板 -->
+    <ScrollView
         android:id="@+id/layoutBackupPanel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="32dp"
-        android:gravity="center"
         android:visibility="gone">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="📦 门店完整数据备份与恢复 (JSON格式)"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:textColor="#111827"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="备份包含：所有菜品、分类、桌台设置、员工账号、快捷折扣按键配置\n可导出保存至U盘或电脑，遇到设备故障可一键导入恢复"
-            android:textSize="14sp"
-            android:textColor="#6B7280"
-            android:gravity="center"
-            android:lineSpacingExtra="6dp"/>
-
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="32dp">
+            android:orientation="vertical"
+            android:padding="28dp"
+            android:gravity="center_horizontal">
 
-            <Button
-                android:id="@+id/btnExportJson"
-                android:layout_width="200dp"
-                android:layout_height="64dp"
-                android:text="📤 导出全量备份文件"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#FFFFFF"
-                android:backgroundTint="#2563EB"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"/>
+            <!-- 1. 打印与钱箱默认行为设置卡片 -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="600dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="3dp">
 
-            <Button
-                android:id="@+id/btnImportJson"
-                android:layout_width="200dp"
-                android:layout_height="64dp"
-                android:layout_marginStart="24dp"
-                android:text="📥 导入备份文件恢复"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#111827"
-                android:backgroundTint="#FFC300"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp"
+                    android:background="#FFFFFF">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🖨 收银打印与钱箱默认行为"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#111827"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="配置每次收银结账时，弹窗是否默认勾选打印和小票（默认均不勾选）"
+                        android:textSize="13sp"
+                        android:textColor="#6B7280"/>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#E5E7EB"
+                        android:layout_marginVertical="12dp"/>
+
+                    <CheckBox
+                        android:id="@+id/cbManageDefaultPrint"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="收银结账时 默认自动勾选【打印小票】"
+                        android:textSize="15sp"
+                        android:textColor="#1F2937"
+                        android:textStyle="bold"/>
+
+                    <CheckBox
+                        android:id="@+id/cbManageDefaultDrawer"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="收银结账时 默认自动勾选【弹出钱箱】"
+                        android:textSize="15sp"
+                        android:textColor="#1F2937"
+                        android:textStyle="bold"/>
+
+                    <Button
+                        android:id="@+id/btnTestPrint"
+                        android:layout_width="wrap_content"
+                        android:layout_height="42dp"
+                        android:layout_marginTop="16dp"
+                        android:text="🖨 测试发送小票与弹钱箱指令"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:backgroundTint="#059669"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- 2. 全量数据备份与恢复卡片 -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="600dp"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="3dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp"
+                    android:background="#FFFFFF">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📦 门店全量数据容灾备份 (JSON)"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#111827"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="包含所有菜品、分类、桌台、员工账号、历史流水订单与明细"
+                        android:textSize="13sp"
+                        android:textColor="#6B7280"/>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#E5E7EB"
+                        android:layout_marginVertical="12dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnExportJson"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:text="📤 导出全量备份"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFFFFF"
+                            android:backgroundTint="#2563EB"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"/>
+
+                        <Button
+                            android:id="@+id/btnImportJson"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="16dp"
+                            android:text="📥 导入恢复数据"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="#111827"
+                            android:backgroundTint="#FFC300"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
         </LinearLayout>
-    </LinearLayout>
+    </ScrollView>
 </LinearLayout>

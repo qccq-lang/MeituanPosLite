@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="380dp"
+    android:layout_width="400dp"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="20dp">
+    android:padding="24dp"
+    android:background="#FFFFFF">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="选择收银支付方式"
-        android:textSize="18sp"
+        android:textSize="20sp"
         android:textStyle="bold"
+        android:textColor="#111827"
         android:gravity="center"/>
 
     <TextView
@@ -18,11 +20,42 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="12dp"
         android:text="应收: ￥0.00"
-        android:textColor="#FF3B30"
-        android:textSize="20sp"
+        android:textColor="#EF4444"
+        android:textSize="22sp"
+        android:textStyle="bold"
         android:gravity="center"/>
+
+    <!-- 动态勾选控制栏 (初始状态继承自后台设置) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"
+        android:background="#F9FAFB"
+        android:paddingVertical="8dp">
+
+        <CheckBox
+            android:id="@+id/cbDialogPrint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="打印小票"
+            android:textColor="#374151"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginEnd="20dp"/>
+
+        <CheckBox
+            android:id="@+id/cbDialogDrawer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="弹出钱箱"
+            android:textColor="#374151"
+            android:textSize="14sp"
+            android:textStyle="bold"/>
+    </LinearLayout>
 
     <GridLayout
         android:layout_width="match_parent"
@@ -31,34 +64,58 @@
 
         <Button
             android:id="@+id/btnPayCash"
-            android:layout_width="160dp"
-            android:layout_height="60dp"
+            android:layout_width="0dp"
+            android:layout_columnWeight="1"
+            android:layout_height="62dp"
             android:layout_margin="4dp"
             android:text="现金支付"
-            android:backgroundTint="#4CAF50"/>
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#10B981"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
 
         <Button
             android:id="@+id/btnPayWechat"
-            android:layout_width="160dp"
-            android:layout_height="60dp"
+            android:layout_width="0dp"
+            android:layout_columnWeight="1"
+            android:layout_height="62dp"
             android:layout_margin="4dp"
             android:text="微信记账"
-            android:backgroundTint="#07C160"/>
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#059669"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
 
         <Button
             android:id="@+id/btnPayAlipay"
-            android:layout_width="160dp"
-            android:layout_height="60dp"
+            android:layout_width="0dp"
+            android:layout_columnWeight="1"
+            android:layout_height="62dp"
             android:layout_margin="4dp"
             android:text="支付宝记账"
-            android:backgroundTint="#1677FF"/>
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#2563EB"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
 
         <Button
             android:id="@+id/btnPayCard"
-            android:layout_width="160dp"
-            android:layout_height="60dp"
+            android:layout_width="0dp"
+            android:layout_columnWeight="1"
+            android:layout_height="62dp"
             android:layout_margin="4dp"
-            android:text="银行卡/挂账"
-            android:backgroundTint="#607D8B"/>
+            android:text="银行卡/记账"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#6B7280"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
     </GridLayout>
 </LinearLayout>
