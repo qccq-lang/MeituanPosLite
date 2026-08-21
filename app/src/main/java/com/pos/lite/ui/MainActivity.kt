@@ -12,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.GridLayout
 import android.widget.ImageView
@@ -31,6 +32,7 @@ import com.pos.lite.print.PosPrinterHelper
 import com.pos.lite.utils.ImageUtil
 import com.pos.lite.utils.LicenseGuard
 import com.pos.lite.utils.PinyinUtil
+import com.pos.lite.utils.PrinterSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
@@ -53,7 +55,6 @@ class MainActivity : AppCompatActivity() {
     private var activeOrderId: Long = 0
     private var isReservingMode: Boolean = false
 
-    // 整单打折与独立抹零
     private var wholeDiscountRate = 1.0
     private var wholeDiscountDeduct = 0.0
     private var wholeDiscountNote = ""
@@ -76,7 +77,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // 埋点 3-A：前台启动校验
         if (LicenseGuard.verifyOrHalt(this)) return
 
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -90,7 +90,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // 埋点 3-B：从后台切回前台校验
         if (LicenseGuard.verifyOrHalt(this)) return
     }
 
@@ -536,8 +535,115 @@ class MainActivity : AppCompatActivity() {
         return finalAfterWhole
     }
 
-            val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_payment, null)
+    // 核心结算弹窗
+    private fun showPaymentDialog() {
+        val finalAmount = calculateFinalAmount()
+        val originalAmount = cartList.sumOf { it.originalSubtotal }
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_payment, null)
+        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
 
+        val tableName = activeTable?.name ?: "快餐"
+        val tvAmount = dialogView.findViewById<TextView>(R.id.tvDialogAmount)
+        if (originalAmount > finalAmount) {
+            tvAmount.text = String.format("[%s] 应收: ￥%.2f (原价￥%.2f 让利￥%.2f)", tableName, finalAmount, originalAmount, originalAmount - finalAmount)
+        } else {
+            tvAmount.text = String.format("[%s] 应收: ￥%.2f", tableName, finalAmount)
+        }
+
+        val cbPrint = dialogView.findViewById<CheckBox>(R.id.cbDialogPrint)
+        val cbDrawer = dialogView.findViewById<CheckBox>(R.id.cbDialogDrawer)
+        cbPrint?.isChecked = PrinterSettings.isDefaultPrintEnabled(this)
+        cbDrawer?.isChecked = PrinterSettings.isDefaultDrawerEnabled(this)
+
+        val payActions = mapOf(
+            R.id.btnPayCash to "现金支付",
+            R.id.btnPayWechat to "微信支付",
+            R.id.btnPayAlipay to "支付宝",
+            R.id.btnPayCard to "银行卡"
+        )
+
+        for ((btnId, payName) in payActions) {
+            dialogView.findViewById<Button>(btnId)?.setOnClickListener {
+                val needPrint = cbPrint?.isChecked ?: false
+                val needDrawer = cbDrawer?.isChecked ?: false
+                completeOrderAndClearTable(payName, finalAmount, originalAmount, needPrint, needDrawer)
+                dialog.dismiss()
+            }
+        }
+        dialog.show()
+    }
+
+    private fun completeOrderAndClearTable(
+        payType: String,
+        totalAmount: Double,
+        originalAmount: Double,
+        needPrint: Boolean = false,
+        needDrawer: Boolean = false
+    ) {
+        if (LicenseGuard.verifyOrHalt(this)) return
+
+        val table = activeTable
+        val tableName = table?.name ?: "快餐"
+        val discountAmount = Math.max(0.0, originalAmount - totalAmount)
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            val dao = App.instance.database.posDao()
+            val orderNo = SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINA).format(Date()) + (100..999).random()
+
+            val order = Order(
+                orderNo = orderNo,
+                originalAmount = originalAmount,
+                discountAmount = discountAmount,
+                totalAmount = totalAmount,
+                payType = payType,
+                cashierName = App.currentStaff?.name ?: "收银员",
+                tableId = table?.id ?: 0,
+                tableName = tableName,
+                status = "PAID",
+                discountNote = if (isAutoMoling) "$wholeDiscountNote 自动抹零".trim() else wholeDiscountNote
+            )
+            val orderId = dao.insertOrder(order)
+            val items = cartList.map {
+                OrderItem(
+                    orderId = orderId,
+                    productId = it.product.id,
+                    productName = it.product.name,
+                    originalPrice = it.product.price,
+                    price = it.singlePrice,
+                    quantity = it.count,
+                    discountNote = it.discountNote
+                )
+            }
+            dao.insertOrderItems(items)
+
+            if (table != null) {
+                table.status = "IDLE"
+                table.currentOrderId = 0
+                table.currentAmount = 0.0
+                table.openTime = 0
+                dao.updateTable(table)
+            }
+
+            PosPrinterHelper.executePrintAction(
+                context = this@MainActivity,
+                order = order,
+                items = items,
+                needPrint = needPrint,
+                needKickDrawer = needDrawer
+            )
+
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@MainActivity, "[$tableName] 收款 ￥${String.format("%.2f", totalAmount)} 成功！已清台", Toast.LENGTH_SHORT).show()
+                if (table != null) {
+                    showTableView()
+                } else {
+                    cartList.clear()
+                    resetWholeDiscount()
+                    updateCartSummary()
+                }
+            }
+        }
+    }
 
     private fun observeCategories() {
         lifecycleScope.launch {
@@ -603,7 +709,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- 桌台大厅适配器 ---
     inner class TableGridAdapter(private val list: List<DiningTable>) : RecyclerView.Adapter<TableGridAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val root: View = v.findViewById(R.id.layoutCardRoot)

@@ -27,7 +27,7 @@ import java.util.*
 class ReportActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityReportBinding
-    private var currentFilter = "TODAY" // TODAY / MONTH / YEAR
+    private var currentFilter = "TODAY"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,7 +92,7 @@ class ReportActivity : AppCompatActivity() {
                 startTime = cal.timeInMillis
                 binding.tvReportPeriod.text = "统计周期: 本月 (" + SimpleDateFormat("yyyy年MM月", Locale.CHINA).format(Date()) + ")"
             }
-            else -> { // YEAR
+            else -> {
                 cal.set(Calendar.DAY_OF_YEAR, 1)
                 cal.set(Calendar.HOUR_OF_DAY, 0)
                 cal.set(Calendar.MINUTE, 0)
@@ -112,7 +112,6 @@ class ReportActivity : AppCompatActivity() {
             val orderCount = orders.size
             val avgPerOrder = if (orderCount > 0) totalSales / orderCount else 0.0
 
-            // 核心统计：按收款账号/收银员汇总业绩
             val cashierMap = orders.groupBy { it.cashierName }
             val cashierSb = StringBuilder()
             for ((name, list) in cashierMap) {
@@ -120,11 +119,9 @@ class ReportActivity : AppCompatActivity() {
                 cashierSb.append("• $name: ${list.size} 笔 (实收 ￥${String.format("%.2f", sum)})\n")
             }
 
-            // 场景分布
             val tableOrders = orders.filter { it.tableId > 0 }
             val fastFoodOrders = orders.filter { it.tableId == 0L }
 
-            // 支付渠道分布
             val payMap = orders.groupBy { it.payType }
             val paySb = StringBuilder()
             for ((payType, list) in payMap) {
@@ -137,7 +134,6 @@ class ReportActivity : AppCompatActivity() {
                 binding.tvOriginalAndDiscount.text = String.format("原价总额: ￥%.2f | 优惠让利: ￥%.2f", totalOriginal, totalDiscount)
                 binding.tvOrderCountAndAvg.text = "有效单量: $orderCount 笔 | 客单价: ￥${String.format("%.2f", avgPerOrder)}"
 
-                // 显示收银员对账分布
                 binding.tvCashierDistribution.text = if (cashierSb.isNotEmpty()) cashierSb.toString().trim() else "暂无收银数据"
 
                 binding.tvTypeDistribution.text = "• 🪑 堂食桌台: ${tableOrders.size} 笔 (￥${String.format("%.2f", tableOrders.sumOf { it.totalAmount })})\n• ⚡ 快餐外带: ${fastFoodOrders.size} 笔 (￥${String.format("%.2f", fastFoodOrders.sumOf { it.totalAmount })})"

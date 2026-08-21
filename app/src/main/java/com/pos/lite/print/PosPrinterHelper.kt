@@ -16,7 +16,6 @@ object PosPrinterHelper {
 
     private const val ACTION_USB_PERMISSION = "com.pos.lite.USB_PERMISSION"
 
-    // ESC/POS 控制指令
     private val ESC_INIT = byteArrayOf(0x1B, 0x40)
     private val ESC_ALIGN_LEFT = byteArrayOf(0x1B, 0x61, 0x00)
     private val ESC_ALIGN_CENTER = byteArrayOf(0x1B, 0x61, 0x01)
@@ -24,10 +23,17 @@ object PosPrinterHelper {
     private val ESC_DOUBLE_SIZE = byteArrayOf(0x1D, 0x21, 0x11)
     private val ESC_NORMAL = byteArrayOf(0x1D, 0x21, 0x00)
     private val ESC_CUT_PAPER = byteArrayOf(0x1D, 0x56, 0x42, 0x00)
-    private val DRAWER_KICK = byteArrayOf(0x1B, 0x70, 0x00, 0x1E, (0xFF).toByte()) // 脉冲弹开钱箱
+    private val DRAWER_KICK = byteArrayOf(0x1B, 0x70, 0x00, 0x1E, (0xFF).toByte())
 
     /**
-     * 核心打印入口：根据勾选状态执行打印与弹箱
+     * 补打小票或直接打印
+     */
+    fun printReceipt(context: Context, order: Order, items: List<OrderItem>) {
+        executePrintAction(context, order, items, needPrint = true, needKickDrawer = false)
+    }
+
+    /**
+     * 结账按需打印与弹箱
      */
     fun executePrintAction(
         context: Context,
@@ -36,13 +42,11 @@ object PosPrinterHelper {
         needPrint: Boolean,
         needKickDrawer: Boolean
     ) {
-        // 两者都不需要，直接跳过硬件通信
         if (!needPrint && !needKickDrawer) {
-            Log.d("PosPrinter", "用户未勾选打印小票和弹钱箱，已静默跳过硬件输出")
+            Log.d("PosPrinter", "跳过打印与弹箱")
             return
         }
 
-        // 仅需要弹开钱箱，不打印小票
         if (!needPrint && needKickDrawer) {
             val kickStream = ByteArrayOutputStream().apply {
                 write(ESC_INIT)
@@ -52,7 +56,6 @@ object PosPrinterHelper {
             return
         }
 
-        // 需要打印小票 (根据 needKickDrawer 决定是否带弹箱指令)
         val bytes = buildReceiptBytes(order, items, needKickDrawer)
         printViaUsb(context, bytes)
     }
@@ -109,17 +112,15 @@ object PosPrinterHelper {
 
         stream.write(ESC_INIT)
         if (kickDrawer) {
-            stream.write(DRAWER_KICK) // 仅在允许时注入弹钱箱指令
+            stream.write(DRAWER_KICK)
         }
 
-        // 标题
         stream.write(ESC_ALIGN_CENTER)
         stream.write(ESC_DOUBLE_SIZE)
         stream.write("六猫餐饮\n".toByteArray(charset("GBK")))
         stream.write(ESC_NORMAL)
         stream.write("--- 结账收款小票 ---\n\n".toByteArray(charset("GBK")))
 
-        // 信息
         stream.write(ESC_ALIGN_LEFT)
         stream.write("单号: ${order.orderNo}\n".toByteArray(charset("GBK")))
         stream.write("场景/桌号: ${order.tableName}\n".toByteArray(charset("GBK")))
@@ -127,7 +128,6 @@ object PosPrinterHelper {
         stream.write("结账时间: $timeStr\n".toByteArray(charset("GBK")))
         stream.write("--------------------------------\n".toByteArray(charset("GBK")))
 
-        // 菜品列表
         stream.write(String.format("%-14s %-4s %-6s\n", "品名", "数量", "金额").toByteArray(charset("GBK")))
         for (item in items) {
             val name = if (item.productName.length > 7) item.productName.substring(0, 6) + ".." else item.productName
