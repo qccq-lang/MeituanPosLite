@@ -1,15 +1,17 @@
 package com.pos.lite.ui
 
+import android.content.DialogInterface
 import android.os.Bundle
-import android.view.LayoutInflater
+import android.text.InputType
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.pos.lite.App
-import com.pos.lite.R
 import com.pos.lite.data.Category
 import com.pos.lite.data.Product
 import com.pos.lite.data.Staff
@@ -30,11 +32,18 @@ class ManageActivity : AppCompatActivity() {
 
         // 1. 新增菜品分类
         binding.btnAddCategory.setOnClickListener {
-            val input = EditText(this)
-            input.hint = "例如: 烧烤、主食、饮料"
+            val input = EditText(this).apply {
+                hint = "输入分类名称 (如: 烧烤、主食、饮料)"
+            }
+            val container = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(50, 40, 50, 10)
+                addView(input)
+            }
+
             AlertDialog.Builder(this)
                 .setTitle("新增商品分类")
-                .setView(input)
+                .setView(container)
                 .setPositiveButton("保存") { _, _ ->
                     val name = input.text.toString().trim()
                     if (name.isNotEmpty()) {
@@ -46,15 +55,16 @@ class ManageActivity : AppCompatActivity() {
                         }
                     }
                 }
-                .setNegativeButton("取消", null).show()
+                .setNegativeButton("取消", null)
+                .show()
         }
 
-        // 2. 新增菜品
+        // 2. 新增菜品 (纯动态布局，无需任何额外XML)
         binding.btnAddProduct.setOnClickListener {
             showAddProductDialog()
         }
 
-        // 3. 新增员工 (仅店长有权)
+        // 3. 新增员工
         binding.btnAddStaff.setOnClickListener {
             if (App.currentStaff?.role != "ADMIN") {
                 Toast.makeText(this, "权限不足: 仅店长可添加员工", Toast.LENGTH_SHORT).show()
@@ -79,29 +89,41 @@ class ManageActivity : AppCompatActivity() {
             val catNames = categories.map { it.name }.toTypedArray()
             var selectedIndex = 0
 
-            val view = LayoutInflater.from(this@ManageActivity).inflate(R.layout.dialog_add_product, null, false)
-            val etName = view.findViewById<EditText>(R.id.etProductName)
-            val etPrice = view.findViewById<EditText>(R.id.etProductPrice)
-            val btnSelectCat = view.findViewById<Button>(R.id.btnChooseCategory)
-            btnSelectCat.text = "分类: " + catNames[0]
+            val etName = EditText(this@ManageActivity).apply {
+                hint = "菜品名称 (例如: 宫保鸡丁)"
+            }
+            val etPrice = EditText(this@ManageActivity).apply {
+                hint = "单价 (元)"
+                inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+            }
+            val btnCat = Button(this@ManageActivity).apply {
+                text = "所属分类: " + catNames[0]
+            }
 
-            btnSelectCat.setOnClickListener {
+            btnCat.setOnClickListener {
                 AlertDialog.Builder(this@ManageActivity)
                     .setTitle("选择分类")
-                    .setSingleChoiceItems(catNames, selectedIndex) { d, which ->
+                    .setSingleChoiceItems(catNames, selectedIndex) { d: DialogInterface, which: Int ->
                         selectedIndex = which
-                        btnSelectCat.text = "分类: " + catNames[which]
+                        btnCat.text = "所属分类: " + catNames[which]
                         d.dismiss()
                     }.show()
             }
 
+            val layout = LinearLayout(this@ManageActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(50, 40, 50, 20)
+                addView(etName)
+                addView(etPrice)
+                addView(btnCat)
+            }
+
             AlertDialog.Builder(this@ManageActivity)
                 .setTitle("新增商品/菜品")
-                .setView(view)
+                .setView(layout)
                 .setPositiveButton("保存") { _, _ ->
                     val name = etName.text.toString().trim()
-                    val priceStr = etPrice.text.toString().trim()
-                    val price = priceStr.toDoubleOrNull() ?: 0.0
+                    val price = etPrice.text.toString().trim().toDoubleOrNull() ?: 0.0
 
                     if (name.isNotEmpty() && price > 0) {
                         val chosenCat = categories[selectedIndex]
@@ -113,20 +135,34 @@ class ManageActivity : AppCompatActivity() {
                                 Toast.makeText(this@ManageActivity, "菜品 [$name] 添加成功", Toast.LENGTH_SHORT).show()
                             }
                         }
+                    } else {
+                        Toast.makeText(this@ManageActivity, "请输入正确的名称和单价", Toast.LENGTH_SHORT).show()
                     }
                 }
-                .setNegativeButton("取消", null).show()
+                .setNegativeButton("取消", null)
+                .show()
         }
     }
 
     private fun showAddStaffDialog() {
-        val view = LayoutInflater.from(this).inflate(R.layout.dialog_add_staff, null, false)
-        val etName = view.findViewById<EditText>(R.id.etStaffName)
-        val etPin = view.findViewById<EditText>(R.id.etStaffPin)
+        val etName = EditText(this).apply {
+            hint = "员工姓名 (例如: 张三)"
+        }
+        val etPin = EditText(this).apply {
+            hint = "登录PIN码 (4~6位数字)"
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
+        }
+
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(50, 40, 50, 20)
+            addView(etName)
+            addView(etPin)
+        }
 
         AlertDialog.Builder(this)
             .setTitle("新增收银员")
-            .setView(view)
+            .setView(layout)
             .setPositiveButton("保存") { _, _ ->
                 val name = etName.text.toString().trim()
                 val pin = etPin.text.toString().trim()
@@ -143,6 +179,7 @@ class ManageActivity : AppCompatActivity() {
                     Toast.makeText(this, "PIN码至少需要4位数字", Toast.LENGTH_SHORT).show()
                 }
             }
-            .setNegativeButton("取消", null).show()
+            .setNegativeButton("取消", null)
+            .show()
     }
 }
