@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="meituan_yellow">#FFD100</color>
+    <color name="meituan_yellow">#FFC300</color>
+    <color name="meituan_dark">#1E2433</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="text_primary">#111827</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="color_idle_bg">#E6F9F0</color>
+    <color name="color_idle_text">#059669</color>
+    <color name="color_occupied_bg">#FEF3C7</color>
+    <color name="color_occupied_text">#D97706</color>
+    <color name="color_reserved_bg">#EFF6FF</color>
+    <color name="color_reserved_text">#2563EB</color>
 </resources>
