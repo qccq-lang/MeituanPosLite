@@ -50,13 +50,13 @@ class MainActivity : AppCompatActivity() {
 
     private var activeTable: DiningTable? = null
     private var activeOrderId: Long = 0
-    private var isReservingMode: Boolean = false // 是否正在为预定桌台提前点菜
+    private var isReservingMode: Boolean = false
 
-    // 整单打折与独立抹零状态
+    // 整单打折与独立抹零
     private var wholeDiscountRate = 1.0
     private var wholeDiscountDeduct = 0.0
     private var wholeDiscountNote = ""
-    private var isAutoMoling = false // 独立抹零勾选
+    private var isAutoMoling = false
 
     data class CartItemModel(
         val product: Product,
@@ -109,7 +109,6 @@ class MainActivity : AppCompatActivity() {
         binding.btnBackToTables.setOnClickListener { showTableView() }
         updateNavModeButtons(isTableMode = true)
 
-        // 独立自动抹零监听
         binding.cbAutoMoling.setOnCheckedChangeListener { _, isChecked ->
             isAutoMoling = isChecked
             updateCartSummary()
@@ -141,7 +140,6 @@ class MainActivity : AppCompatActivity() {
             showDiscountButtonGridDialog(isWholeOrder = true, targetItem = null)
         }
 
-        // 下单挂单 / 预定保存
         binding.btnSaveTableOrder.setOnClickListener {
             if (activeTable == null) {
                 Toast.makeText(this, "快餐模式请直接点击【结账收款】", Toast.LENGTH_SHORT).show()
@@ -399,7 +397,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 1. 直接开台点餐
+    // 直接开台
     private fun startOrderForTable(table: DiningTable) {
         activeTable = table
         activeOrderId = 0
@@ -414,7 +412,7 @@ class MainActivity : AppCompatActivity() {
         binding.layoutOrderScreen.visibility = View.VISIBLE
     }
 
-    // 2. 预定并提前点菜 (核心功能)
+    // 预定点菜 (直接进入点餐界面)
     private fun startPreOrderForReservation(table: DiningTable) {
         activeTable = table
         activeOrderId = 0
@@ -422,14 +420,13 @@ class MainActivity : AppCompatActivity() {
         cartList.clear()
         resetWholeDiscount()
         updateCartSummary()
-        binding.tvOrderTableTitle.text = "【提前预定点菜】桌台: ${table.name}"
+        binding.tvOrderTableTitle.text = "【预定提前点菜】桌台: ${table.name}"
         binding.btnSaveTableOrder.visibility = View.VISIBLE
         binding.btnSaveTableOrder.text = "保存预定菜单"
         binding.layoutTableOverview.visibility = View.GONE
         binding.layoutOrderScreen.visibility = View.VISIBLE
     }
 
-    // 读取就餐中或预定中的订单
     private fun loadExistingTableOrder(table: DiningTable, isFromReservation: Boolean = false, onLoaded: (() -> Unit)? = null) {
         activeTable = table
         activeOrderId = table.currentOrderId
@@ -506,7 +503,6 @@ class MainActivity : AppCompatActivity() {
             }
             dao.insertOrderItems(items)
 
-            // 根据是否是预定模式设置桌台状态
             table.status = if (isReservingMode) "RESERVED" else "OCCUPIED"
             table.currentOrderId = orderId
             table.currentAmount = finalAmount
@@ -514,20 +510,18 @@ class MainActivity : AppCompatActivity() {
             dao.updateTable(table)
 
             withContext(Dispatchers.Main) {
-                val msg = if (isReservingMode) "桌台 [${table.name}] 提前预定菜单保存成功！预点总额: ￥${String.format("%.2f", finalAmount)}" else "桌台 [${table.name}] 挂单成功！总额: ￥${String.format("%.2f", finalAmount)}"
+                val msg = if (isReservingMode) "桌台 [${table.name}] 预定菜单已保存！预点总额: ￥${String.format("%.2f", finalAmount)}" else "桌台 [${table.name}] 挂单成功！总额: ￥${String.format("%.2f", finalAmount)}"
                 Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
                 showTableView()
             }
         }
     }
 
-    // 核心独立抹零算法 (无论有无折扣，勾选抹零均自动抹掉角分)
     private fun calculateFinalAmount(): Double {
         val sumAfterItemDiscount = cartList.sumOf { it.subtotal }
         var finalAfterWhole = (sumAfterItemDiscount * wholeDiscountRate) - wholeDiscountDeduct
         finalAfterWhole = Math.max(0.0, finalAfterWhole)
 
-        // 独立抹零逻辑
         if (isAutoMoling) {
             finalAfterWhole = floor(finalAfterWhole)
         }
@@ -686,7 +680,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- 桌台大厅卡片适配器 (支持预定点菜识别与区域色彩) ---
+    // --- 桌台大厅适配器 (3按键直接响应：开台、预定、预定点菜，零二次弹窗) ---
     inner class TableGridAdapter(private val list: List<DiningTable>) : RecyclerView.Adapter<TableGridAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val root: View = v.findViewById(R.id.layoutCardRoot)
@@ -706,7 +700,7 @@ class MainActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: VH, position: Int) {
             val table = list[position]
             holder.tvName.text = table.name
-            holder.tvCapacity.text = "[${table.area}] ${table.capacity}人"
+            holder.tvCapacity.text = "(${table.area}·${table.capacity}人)"
 
             when (table.status) {
                 "OCCUPIED" -> {
@@ -717,11 +711,11 @@ class MainActivity : AppCompatActivity() {
                     holder.tvTableAmount.visibility = View.VISIBLE
                     holder.tvTableAmount.text = String.format("￥%.2f", table.currentAmount)
 
-                    holder.btnAction1.text = "➕ 加菜/查单"
+                    holder.btnAction1.text = "加菜"
                     holder.btnAction1.setBackgroundColor(Color.parseColor("#F59E0B"))
                     holder.btnAction1.setOnClickListener { loadExistingTableOrder(table, isFromReservation = false) }
 
-                    holder.btnAction2.text = "💰 结账收款"
+                    holder.btnAction2.text = "结账"
                     holder.btnAction2.setBackgroundColor(Color.parseColor("#10B981"))
                     holder.btnAction2.setOnClickListener {
                         loadExistingTableOrder(table, isFromReservation = false) { showPaymentDialog() }
@@ -729,6 +723,7 @@ class MainActivity : AppCompatActivity() {
 
                     holder.btnAction3.visibility = View.VISIBLE
                     holder.btnAction3.text = "清台"
+                    holder.btnAction3.setBackgroundColor(Color.parseColor("#EF4444"))
                     holder.btnAction3.setOnClickListener {
                         lifecycleScope.launch(Dispatchers.IO) {
                             table.status = "IDLE"
@@ -741,7 +736,7 @@ class MainActivity : AppCompatActivity() {
                 "RESERVED" -> {
                     holder.root.setBackgroundColor(Color.parseColor("#EFF6FF"))
                     val hasPreOrder = (table.currentAmount > 0)
-                    holder.tvStatusBadge.text = if (hasPreOrder) "🔵 已预定 (已预点菜)" else "🔵 已预定"
+                    holder.tvStatusBadge.text = if (hasPreOrder) "🔵 已预定 (有预点)" else "🔵 已预定"
                     holder.tvStatusBadge.setTextColor(Color.parseColor("#2563EB"))
 
                     if (hasPreOrder) {
@@ -753,8 +748,7 @@ class MainActivity : AppCompatActivity() {
                         holder.tvTableAmount.visibility = View.GONE
                     }
 
-                    // 到店开台 -> 转为就餐中
-                    holder.btnAction1.text = "▶ 到店开台"
+                    holder.btnAction1.text = "开台"
                     holder.btnAction1.setBackgroundColor(Color.parseColor("#059669"))
                     holder.btnAction1.setOnClickListener {
                         table.status = "OCCUPIED"
@@ -770,8 +764,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
 
-                    // 预点菜/查单按钮
-                    holder.btnAction2.text = if (hasPreOrder) "➕ 预点查/加" else "🍽 提前预点菜"
+                    holder.btnAction2.text = if (hasPreOrder) "改预点" else "补预点"
                     holder.btnAction2.setBackgroundColor(Color.parseColor("#2563EB"))
                     holder.btnAction2.setOnClickListener {
                         if (hasPreOrder) {
@@ -783,6 +776,7 @@ class MainActivity : AppCompatActivity() {
 
                     holder.btnAction3.visibility = View.VISIBLE
                     holder.btnAction3.text = "退订"
+                    holder.btnAction3.setBackgroundColor(Color.parseColor("#6B7280"))
                     holder.btnAction3.setOnClickListener {
                         lifecycleScope.launch(Dispatchers.IO) {
                             table.status = "IDLE"
@@ -792,7 +786,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-                else -> { // 空闲
+                else -> { // 空闲状态：3个直达大按钮，绝无二次弹窗！
                     val areaBgColor = when (table.area) {
                         "包厢" -> "#FEF9C3"
                         "卡座" -> "#FCE7F3"
@@ -802,31 +796,31 @@ class MainActivity : AppCompatActivity() {
                     holder.root.setBackgroundColor(Color.parseColor(areaBgColor))
                     holder.tvStatusBadge.text = "🟢 空闲"
                     holder.tvStatusBadge.setTextColor(Color.parseColor("#059669"))
-                    holder.tvTableInfo.text = "桌位就绪，可点单"
+                    holder.tvTableInfo.text = "桌位空闲就绪"
                     holder.tvTableAmount.visibility = View.GONE
 
-                    holder.btnAction1.text = "🍽 开台点餐"
+                    // 按钮1：直接开台
+                    holder.btnAction1.text = "开台"
                     holder.btnAction1.setBackgroundColor(Color.parseColor("#059669"))
                     holder.btnAction1.setOnClickListener { startOrderForTable(table) }
 
-                    // 预定按键：支持选择“仅预定”或“提前点菜”
-                    holder.btnAction2.text = "📅 设为预定"
+                    // 按钮2：一键纯预定 (不弹二级窗口)
+                    holder.btnAction2.text = "预定"
                     holder.btnAction2.setBackgroundColor(Color.parseColor("#2563EB"))
                     holder.btnAction2.setOnClickListener {
-                        AlertDialog.Builder(this@MainActivity)
-                            .setTitle("预定桌台: ${table.name}")
-                            .setItems(arrayOf("1. 仅预定桌位 (稍后到店点菜)", "2. 预定并提前点菜 (记录预定菜单)")) { _, which ->
-                                if (which == 0) {
-                                    table.status = "RESERVED"
-                                    lifecycleScope.launch(Dispatchers.IO) {
-                                        App.instance.database.posDao().updateTable(table)
-                                    }
-                                } else {
-                                    startPreOrderForReservation(table)
-                                }
-                            }.show()
+                        table.status = "RESERVED"
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            App.instance.database.posDao().updateTable(table)
+                        }
                     }
-                    holder.btnAction3.visibility = View.GONE
+
+                    // 按钮3：直接进入预定点菜
+                    holder.btnAction3.visibility = View.VISIBLE
+                    holder.btnAction3.text = "预定点菜"
+                    holder.btnAction3.setBackgroundColor(Color.parseColor("#8B5CF6"))
+                    holder.btnAction3.setOnClickListener {
+                        startPreOrderForReservation(table)
+                    }
                 }
             }
         }

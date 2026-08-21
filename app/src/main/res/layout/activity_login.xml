@@ -41,7 +41,7 @@
             android:lineSpacingExtra="6dp"/>
     </LinearLayout>
 
-    <!-- 右侧实体按键键盘 (纯白卡片) -->
+    <!-- 右侧实体按键键盘 (严格等宽高 3x4 网格) -->
     <LinearLayout
         android:layout_width="400dp"
         android:layout_height="match_parent"
@@ -72,7 +72,7 @@
             android:textStyle="bold"
             android:letterSpacing="0.3" />
 
-        <!-- 3x4 实体按键网格 -->
+        <!-- 3x4 严格等比例对齐按键 -->
         <GridLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

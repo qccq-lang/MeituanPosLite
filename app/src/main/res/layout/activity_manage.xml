@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:background="#F3F4F6">
 
-    <!-- 顶部导航与5大子模块切换 -->
+    <!-- 顶部导航与模块切换 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -22,63 +22,81 @@
             android:textColor="#111827"
             android:backgroundTint="#FFC300"
             android:insetTop="0dp"
-            android:insetBottom="0dp"/>
+            android:insetBottom="0dp"
+            android:singleLine="true"/>
 
         <Button
             android:id="@+id/btnTabProducts"
             android:layout_width="wrap_content"
             android:layout_height="38dp"
             android:layout_marginStart="14dp"
-            android:text="🍲 菜品管理"
+            android:text="🍲 菜品"
             android:textColor="#FFFFFF"
             android:backgroundTint="#1E2433"
             android:insetTop="0dp"
-            android:insetBottom="0dp"/>
+            android:insetBottom="0dp"
+            android:singleLine="true"/>
 
         <Button
             android:id="@+id/btnTabCategories"
             android:layout_width="wrap_content"
             android:layout_height="38dp"
             android:layout_marginStart="6dp"
-            android:text="📑 分类管理"
+            android:text="📑 分类"
             android:textColor="#111827"
             android:backgroundTint="#E5E7EB"
             android:insetTop="0dp"
-            android:insetBottom="0dp"/>
+            android:insetBottom="0dp"
+            android:singleLine="true"/>
 
         <Button
             android:id="@+id/btnTabStaffs"
             android:layout_width="wrap_content"
             android:layout_height="38dp"
             android:layout_marginStart="6dp"
-            android:text="👤 员工管理"
+            android:text="👤 员工"
             android:textColor="#111827"
             android:backgroundTint="#E5E7EB"
             android:insetTop="0dp"
-            android:insetBottom="0dp"/>
+            android:insetBottom="0dp"
+            android:singleLine="true"/>
 
         <Button
             android:id="@+id/btnTabTables"
             android:layout_width="wrap_content"
             android:layout_height="38dp"
             android:layout_marginStart="6dp"
-            android:text="🪑 桌台管理"
+            android:text="🪑 桌台"
             android:textColor="#111827"
             android:backgroundTint="#E5E7EB"
             android:insetTop="0dp"
-            android:insetBottom="0dp"/>
+            android:insetBottom="0dp"
+            android:singleLine="true"/>
 
-        <!-- 新增：折扣配置模块 -->
         <Button
             android:id="@+id/btnTabDiscounts"
             android:layout_width="wrap_content"
             android:layout_height="38dp"
             android:layout_marginStart="6dp"
-            android:text="🏷 折扣配置"
+            android:text="🏷 折扣"
             android:textColor="#111827"
             android:backgroundTint="#E5E7EB"
             android:insetTop="0dp"
-            android:insetBottom="0dp"/>
+            android:insetBottom="0dp"
+            android:singleLine="true"/>
+
+        <!-- 数据备份与恢复模块 -->
+        <Button
+            android:id="@+id/btnTabBackup"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginStart="6dp"
+            android:text="💾 备份/恢复"
+            android:textColor="#111827"
+            android:backgroundTint="#E5E7EB"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:singleLine="true"/>
 
         <View
             android:layout_width="0dp"
@@ -94,24 +112,88 @@
             android:textColor="#FFFFFF"
             android:backgroundTint="#10B981"
             android:insetTop="0dp"
-            android:insetBottom="0dp"/>
+            android:insetBottom="0dp"
+            android:singleLine="true"/>
     </LinearLayout>
 
-    <!-- 顶部状态统计栏 -->
     <TextView
         android:id="@+id/tvManageHeaderInfo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="16dp"
         android:paddingVertical="8dp"
-        android:text="菜品总数: 0 | 已在售: 0"
+        android:text="菜品总数: 0"
         android:textSize="13sp"
         android:textColor="#6B7280"
-        android:background="#FAFAFA"/>
+        android:background="#FAFAFA"
+        android:singleLine="true"/>
 
+    <!-- 列表展示区域 -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvManageList"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16dp"/>
+        android:padding="16dp"
+        android:visibility="visible"/>
+
+    <!-- 备份/恢复专有面板 -->
+    <LinearLayout
+        android:id="@+id/layoutBackupPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📦 门店完整数据备份与恢复 (JSON格式)"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#111827"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="备份包含：所有菜品、分类、桌台设置、员工账号、快捷折扣按键配置\n可导出保存至U盘或电脑，遇到设备故障可一键导入恢复"
+            android:textSize="14sp"
+            android:textColor="#6B7280"
+            android:gravity="center"
+            android:lineSpacingExtra="6dp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="32dp">
+
+            <Button
+                android:id="@+id/btnExportJson"
+                android:layout_width="200dp"
+                android:layout_height="64dp"
+                android:text="📤 导出全量备份文件"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#2563EB"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"/>
+
+            <Button
+                android:id="@+id/btnImportJson"
+                android:layout_width="200dp"
+                android:layout_height="64dp"
+                android:layout_marginStart="24dp"
+                android:text="📥 导入备份文件恢复"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#111827"
+                android:backgroundTint="#FFC300"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"/>
+        </LinearLayout>
+    </LinearLayout>
 </LinearLayout>

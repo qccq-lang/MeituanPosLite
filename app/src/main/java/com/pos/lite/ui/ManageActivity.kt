@@ -21,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.gson.Gson
 import com.pos.lite.App
 import com.pos.lite.R
 import com.pos.lite.data.*
@@ -30,21 +31,132 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ManageActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityManageBinding
-    private var currentTab = "PRODUCTS"
+    private var currentTab = "PRODUCTS" // PRODUCTS / CATEGORIES / STAFFS / TABLES / DISCOUNTS / BACKUP
 
     private var tempSelectedImageUri: String = ""
     private var dialogPreviewImageView: ImageView? = null
 
+    // 全量备份数据结构
+    data class PosFullBackupData(
+        val version: Int = 1,
+        val exportTime: String = "",
+        val categories: List<Category> = emptyList(),
+        val products: List<Product> = emptyList(),
+        val tables: List<DiningTable> = emptyList(),
+        val staffs: List<Staff> = emptyList(),
+        val discountConfigs: List<DiscountConfig> = emptyList()
+    )
+
+    // 1. 相册选图注册器
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             tempSelectedImageUri = it.toString()
             dialogPreviewImageView?.let { iv ->
                 iv.visibility = View.VISIBLE
                 ImageUtil.loadSafeImage(this, tempSelectedImageUri, iv)
+            }
+        }
+    }
+
+    // 2. 导出文件创建器 (生成 JSON)
+    private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
+        uri?.let { targetUri ->
+            lifecycleScope.launch(Dispatchers.IO) {
+                val dao = App.instance.database.posDao()
+                val backup = PosFullBackupData(
+                    version = 1,
+                    exportTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA).format(Date()),
+                    categories = dao.getAllCategories().first(),
+                    products = dao.getAllProducts().first(),
+                    tables = dao.getAllTables().first(),
+                    staffs = dao.getAllStaffs().first(),
+                    discountConfigs = dao.getAllDiscountConfigs().first()
+                )
+
+                val jsonString = Gson().toJson(backup)
+                try {
+                    contentResolver.openOutputStream(targetUri)?.use { out ->
+                        out.write(jsonString.toByteArray(charset("UTF-8")))
+                        out.flush()
+                    }
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@ManageActivity, "✅ 全量数据导出备份成功！", Toast.LENGTH_LONG).show()
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@ManageActivity, "❌ 导出失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
+
+    // 3. 导入文件选择器 (读取 JSON 并恢复)
+    private val importLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let { sourceUri ->
+            lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    val stringBuilder = StringBuilder()
+                    contentResolver.openInputStream(sourceUri)?.use { input ->
+                        BufferedReader(InputStreamReader(input, "UTF-8")).use { reader ->
+                            var line: String?
+                            while (reader.readLine().also { line = it } != null) {
+                                stringBuilder.append(line)
+                            }
+                        }
+                    }
+
+                    val backup = Gson().fromJson(stringBuilder.toString(), PosFullBackupData::class.java)
+
+                    withContext(Dispatchers.Main) {
+                        if (backup != null) {
+                            AlertDialog.Builder(this@ManageActivity)
+                                .setTitle("确认恢复数据")
+                                .setMessage("备份时间: ${backup.exportTime}\n包含 ${backup.products.size} 个菜品、${backup.tables.size} 张桌台、${backup.categories.size} 个分类\n\n确定导入并覆盖当前数据吗？")
+                                .setPositiveButton("立即导入") { _, _ ->
+                                    executeImportData(backup)
+                                }
+                                .setNegativeButton("取消", null)
+                                .show()
+                        } else {
+                            Toast.makeText(this@ManageActivity, "无法解析备份文件", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@ManageActivity, "读取备份失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun executeImportData(backup: PosFullBackupData) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val dao = App.instance.database.posDao()
+
+            // 导入分类
+            for (c in backup.categories) dao.insertCategory(c)
+            // 导入菜品
+            for (p in backup.products) dao.insertProduct(p)
+            // 导入桌台
+            for (t in backup.tables) dao.insertTable(t)
+            // 导入员工
+            for (s in backup.staffs) dao.insertStaff(s)
+            // 导入折扣
+            for (d in backup.discountConfigs) dao.insertDiscountConfig(d)
+
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@ManageActivity, "🎉 数据恢复成功！已全部生效", Toast.LENGTH_LONG).show()
+                switchTab("PRODUCTS")
             }
         }
     }
@@ -62,6 +174,17 @@ class ManageActivity : AppCompatActivity() {
         binding.btnTabStaffs.setOnClickListener { switchTab("STAFFS") }
         binding.btnTabTables.setOnClickListener { switchTab("TABLES") }
         binding.btnTabDiscounts.setOnClickListener { switchTab("DISCOUNTS") }
+        binding.btnTabBackup.setOnClickListener { switchTab("BACKUP") }
+
+        // 备份与恢复按键
+        binding.btnExportJson.setOnClickListener {
+            val defaultFileName = "pos_backup_" + SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA).format(Date()) + ".json"
+            exportLauncher.launch(defaultFileName)
+        }
+
+        binding.btnImportJson.setOnClickListener {
+            importLauncher.launch("application/json")
+        }
 
         binding.btnAddNewItem.setOnClickListener {
             when (currentTab) {
@@ -83,7 +206,8 @@ class ManageActivity : AppCompatActivity() {
             "CATEGORIES" to binding.btnTabCategories,
             "STAFFS" to binding.btnTabStaffs,
             "TABLES" to binding.btnTabTables,
-            "DISCOUNTS" to binding.btnTabDiscounts
+            "DISCOUNTS" to binding.btnTabDiscounts,
+            "BACKUP" to binding.btnTabBackup
         )
 
         for ((k, btn) in tabs) {
@@ -92,12 +216,24 @@ class ManageActivity : AppCompatActivity() {
             btn.setTextColor(if (isSelected) Color.WHITE else Color.parseColor("#111827"))
         }
 
+        if (tab == "BACKUP") {
+            binding.btnAddNewItem.visibility = View.GONE
+            binding.rvManageList.visibility = View.GONE
+            binding.layoutBackupPanel.visibility = View.VISIBLE
+            binding.tvManageHeaderInfo.text = "门店数据备份与容灾恢复"
+            return
+        } else {
+            binding.btnAddNewItem.visibility = View.VISIBLE
+            binding.rvManageList.visibility = View.VISIBLE
+            binding.layoutBackupPanel.visibility = View.GONE
+        }
+
         when (tab) {
             "PRODUCTS" -> binding.btnAddNewItem.text = "➕ 新增菜品"
             "CATEGORIES" -> binding.btnAddNewItem.text = "➕ 新增分类"
             "STAFFS" -> binding.btnAddNewItem.text = "➕ 新增员工"
             "TABLES" -> binding.btnAddNewItem.text = "➕ 新增桌台"
-            "DISCOUNTS" -> binding.btnAddNewItem.text = "➕ 新增快捷折扣"
+            "DISCOUNTS" -> binding.btnAddNewItem.text = "➕ 新增折扣"
         }
 
         loadListData()
@@ -132,7 +268,7 @@ class ManageActivity : AppCompatActivity() {
                 "TABLES" -> {
                     val tables = dao.getAllTables().first()
                     withContext(Dispatchers.Main) {
-                        binding.tvManageHeaderInfo.text = "桌台总数: ${tables.size} 张 (已按区域色彩分类)"
+                        binding.tvManageHeaderInfo.text = "桌台总数: ${tables.size} 张 (已按大厅/包厢/卡座色彩分区)"
                         binding.rvManageList.adapter = TableListAdapter(tables)
                     }
                 }
@@ -225,6 +361,7 @@ class ManageActivity : AppCompatActivity() {
                 text = "所属分类: " + chosenCat.name + " (点击切换)"
                 setTextColor(Color.parseColor("#1E2433"))
                 setBackgroundColor(Color.parseColor("#FEF3C7"))
+                setSingleLine(true)
             }
 
             btnCat.setOnClickListener {
@@ -255,6 +392,7 @@ class ManageActivity : AppCompatActivity() {
                 text = "📸 选择/拍照菜品封面图"
                 setBackgroundColor(Color.parseColor("#E5E7EB"))
                 setTextColor(Color.parseColor("#111827"))
+                setSingleLine(true)
                 setOnClickListener {
                     pickImageLauncher.launch("image/*")
                 }
@@ -361,7 +499,7 @@ class ManageActivity : AppCompatActivity() {
             }.setNegativeButton("取消", null).show()
     }
 
-    // 4. 桌台增改 (选择区域完全按色彩上色)
+    // 4. 桌台增改 (区域彩色按钮)
     private fun showEditTableDialog(table: DiningTable?) {
         val areaConfigs = listOf(
             Triple("大厅", "#E0E7FF", "#3730A3"),
@@ -382,6 +520,7 @@ class ManageActivity : AppCompatActivity() {
             text = "所属区域: $selectedArea (点击切换)"
             setBackgroundColor(Color.parseColor(matching.second))
             setTextColor(Color.parseColor(matching.third))
+            setSingleLine(true)
         }
 
         btnArea.setOnClickListener {
@@ -395,13 +534,13 @@ class ManageActivity : AppCompatActivity() {
                 .setNegativeButton("取消", null)
                 .create()
 
-            // 区域选择按钮全部使用对应区域色彩上色！
             for (item in areaConfigs) {
                 val b = Button(this@ManageActivity).apply {
                     text = item.first
                     textSize = 14f
                     setBackgroundColor(Color.parseColor(item.second))
                     setTextColor(Color.parseColor(item.third))
+                    setSingleLine(true)
                     layoutParams = LinearLayout.LayoutParams(0, 110, 1f).apply { marginEnd = 6 }
                     setOnClickListener {
                         selectedArea = item.first
@@ -460,8 +599,8 @@ class ManageActivity : AppCompatActivity() {
             setPadding(0, 10, 0, 10)
         }
 
-        val btnRate = Button(this).apply { text = "比例打折"; layoutParams = LinearLayout.LayoutParams(0, 90, 1f) }
-        val btnDeduct = Button(this).apply { text = "固定立减"; layoutParams = LinearLayout.LayoutParams(0, 90, 1f) }
+        val btnRate = Button(this).apply { text = "比例打折"; layoutParams = LinearLayout.LayoutParams(0, 90, 1f); setSingleLine(true) }
+        val btnDeduct = Button(this).apply { text = "固定立减"; layoutParams = LinearLayout.LayoutParams(0, 90, 1f); setSingleLine(true) }
 
         fun updateTypeBtnStyles() {
             btnRate.setBackgroundColor(if (selectedType == "RATE") Color.parseColor("#1E2433") else Color.parseColor("#E5E7EB"))
@@ -619,7 +758,6 @@ class ManageActivity : AppCompatActivity() {
         override fun getItemCount() = list.size
     }
 
-    // 桌台管理：按区域分类色彩渲染
     inner class TableListAdapter(private val list: List<DiningTable>) : RecyclerView.Adapter<TableListAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val tvTitle: TextView = v.findViewById(R.id.tvRowTitle)
@@ -633,17 +771,7 @@ class ManageActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: VH, position: Int) {
             val table = list[position]
 
-            // 区域色彩映射
-            val (bgColor, textColor) = when (table.area) {
-                "包厢" -> "#FEF3C7" to "#B45309"
-                "卡座" -> "#FCE7F3" to "#9D174D"
-                "露台" -> "#CCFBF1" to "#0F766E"
-                else -> "#E0E7FF" to "#3730A3"
-            }
-
             holder.tvTitle.text = "${table.name} 【${table.area}】"
-            holder.tvTitle.setTextColor(Color.parseColor(textColor))
-
             val statusDesc = if (table.status == "OCCUPIED") "就餐中 (消费 ￥${table.currentAmount})" else if (table.status == "RESERVED") "已预定" else "空闲"
             holder.tvSubtitle.text = "区域: ${table.area} | 建议容量: ${table.capacity}人桌 | 状态: $statusDesc"
 
