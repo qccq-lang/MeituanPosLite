@@ -5,141 +5,156 @@
     android:orientation="horizontal"
     android:background="#1E2433">
 
-    <!-- 左侧品牌标识 -->
-    <LinearLayout
+    <!-- 左侧品牌说明 (加 ScrollView 保证任意分辨率不溢出) -->
+    <ScrollView
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="32dp">
+        android:fillViewport="true">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="六猫餐饮"
-            android:textColor="#FFC300"
-            android:textSize="38sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="纯本地单机版 | 堂食桌台与快餐管理"
-            android:textColor="#9CA3AF"
-            android:textSize="18sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:text="初始账号密码：\n店长 PIN: 888888\n收银员 PIN: 1234"
-            android:textColor="#6B7280"
-            android:textSize="15sp"
             android:gravity="center"
-            android:lineSpacingExtra="6dp"/>
-    </LinearLayout>
+            android:orientation="vertical"
+            android:padding="16dp">
 
-    <!-- 右侧实体按键键盘 (4行严格等宽等高对齐) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="六猫餐饮"
+                android:textColor="#FFC300"
+                android:textSize="32sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="纯本地单机版 | 堂食桌台与快餐管理"
+                android:textColor="#9CA3AF"
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="初始账号密码：\n店长 PIN: 888888  |  收银员 PIN: 1234\n(支持屏幕触控与物理键盘输入)"
+                android:textColor="#6B7280"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:lineSpacingExtra="4dp"/>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- 右侧实体按键键盘 (采用 100% 弹性权重高度，完美适配手机与收银机，永不截断) -->
     <LinearLayout
-        android:layout_width="400dp"
+        android:layout_width="340dp"
         android:layout_height="match_parent"
-        android:gravity="center"
         android:orientation="vertical"
         android:background="#FFFFFF"
-        android:padding="28dp">
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:text="请输入员工登录 PIN 码"
             android:textColor="#111827"
-            android:textSize="20sp"
+            android:textSize="16sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvPinDisplay"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="16dp"
+            android:layout_height="44dp"
+            android:layout_marginTop="6dp"
             android:background="#F3F4F6"
             android:gravity="center"
             android:hint="请输入PIN码"
             android:textColorHint="#9CA3AF"
             android:textColor="#111827"
-            android:textSize="32sp"
+            android:textSize="26sp"
             android:textStyle="bold"
             android:letterSpacing="0.3" />
 
-        <!-- 4行完全等比对称布局 -->
+        <!-- 4 行按键容器：使用 layout_weight="1" 自动平分剩余屏幕高度 -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:orientation="vertical"
-            android:layout_marginTop="20dp">
+            android:layout_marginTop="8dp">
 
             <!-- 第一排: 1, 2, 3 -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="64dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"
                 android:orientation="horizontal"
                 android:weightSum="3"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="4dp">
 
-                <TextView android:id="@+id/btn1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
-                <TextView android:id="@+id/btn2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginHorizontal="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
-                <TextView android:id="@+id/btn3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="3dp" android:gravity="center" android:textSize="22sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginHorizontal="3dp" android:gravity="center" android:textSize="22sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="3dp" android:gravity="center" android:textSize="22sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
             </LinearLayout>
 
             <!-- 第二排: 4, 5, 6 -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="64dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"
                 android:orientation="horizontal"
                 android:weightSum="3"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="4dp">
 
-                <TextView android:id="@+id/btn4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
-                <TextView android:id="@+id/btn5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginHorizontal="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
-                <TextView android:id="@+id/btn6" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="3dp" android:gravity="center" android:textSize="22sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginHorizontal="3dp" android:gravity="center" android:textSize="22sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn6" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="3dp" android:gravity="center" android:textSize="22sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
             </LinearLayout>
 
             <!-- 第三排: 7, 8, 9 -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="64dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"
                 android:orientation="horizontal"
                 android:weightSum="3"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="4dp">
 
-                <TextView android:id="@+id/btn7" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
-                <TextView android:id="@+id/btn8" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginHorizontal="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
-                <TextView android:id="@+id/btn9" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn7" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="3dp" android:gravity="center" android:textSize="22sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn8" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginHorizontal="3dp" android:gravity="center" android:textSize="22sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn9" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="3dp" android:gravity="center" android:textSize="22sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
             </LinearLayout>
 
-            <!-- 第四排: 清空, 0, 删除 (完全等宽等高对齐) -->
+            <!-- 第四排: 清空, 0, ⌫ -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="64dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"
                 android:orientation="horizontal"
                 android:weightSum="3">
 
-                <TextView android:id="@+id/btnClear" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="4dp" android:gravity="center" android:textSize="18sp" android:textStyle="bold" android:background="#FEE2E2" android:clickable="true" android:focusable="true"/>
-                <TextView android:id="@+id/btn0" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginHorizontal="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
-                <TextView android:id="@+id/btnDelete" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="4dp" android:gravity="center" android:textSize="22sp" android:textStyle="bold" android:background="#E5E7EB" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btnClear" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="3dp" android:gravity="center" android:textSize="16sp" android:textStyle="bold" android:background="#FEE2E2" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btn0" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginHorizontal="3dp" android:gravity="center" android:textSize="22sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+                <TextView android:id="@+id/btnDelete" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="3dp" android:gravity="center" android:textSize="20sp" android:textStyle="bold" android:background="#E5E7EB" android:clickable="true" android:focusable="true"/>
             </LinearLayout>
         </LinearLayout>
 
+        <!-- 进入系统按钮：紧凑高度，保证 100% 露在屏幕内 -->
         <Button
             android:id="@+id/btnLogin"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="20dp"
+            android:layout_height="44dp"
+            android:layout_marginTop="6dp"
             android:text="进入系统"
             android:textStyle="bold"
-            android:textSize="20sp"
+            android:textSize="17sp"
             android:backgroundTint="#FFC300"
-            android:textColor="#111827"/>
+            android:textColor="#111827"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
     </LinearLayout>
 </LinearLayout>
