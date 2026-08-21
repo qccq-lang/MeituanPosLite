@@ -5,7 +5,9 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.Paint
 import android.os.Bundle
+import android.text.Editable
 import android.text.InputType
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,6 +26,7 @@ import com.pos.lite.R
 import com.pos.lite.data.*
 import com.pos.lite.databinding.ActivityMainBinding
 import com.pos.lite.print.PosPrinterHelper
+import com.pos.lite.utils.PinyinUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
@@ -36,12 +39,16 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val cartList = mutableListOf<CartItemModel>()
-    private var selectedCategoryId: Long = -1
+
+    // 全部菜品池与搜索过滤
+    private var allProductsList = listOf<Product>()
+    private var selectedCategoryId: Long = -1L // -1 代表【全部】
+    private var searchKeyword: String = ""
 
     private var activeTable: DiningTable? = null
     private var activeOrderId: Long = 0
 
-    // 整单打折与减免
+    // 整单打折状态
     private var wholeDiscountRate = 1.0
     private var wholeDiscountDeduct = 0.0
     private var wholeDiscountNote = ""
@@ -69,6 +76,7 @@ class MainActivity : AppCompatActivity() {
         setupUI()
         observeTables()
         observeCategories()
+        observeProducts()
     }
 
     private fun setupUI() {
@@ -77,11 +85,13 @@ class MainActivity : AppCompatActivity() {
         val roleDesc = if (staff?.role == "ADMIN") "店长" else "收银员"
         binding.tvCashierInfo.text = "员工: $staffName ($roleDesc)"
 
-        // 核心权限隔离：普通收银员完全隐藏后台管理
+        // 核心权限隔离：普通收银员完全隐藏后台管理和营业报表！
         if (staff?.role == "ADMIN") {
             binding.btnManage.visibility = View.VISIBLE
+            binding.btnReport.visibility = View.VISIBLE
         } else {
             binding.btnManage.visibility = View.GONE
+            binding.btnReport.visibility = View.GONE
         }
 
         binding.rvTableGrid.layoutManager = GridLayoutManager(this, 4)
@@ -90,9 +100,26 @@ class MainActivity : AppCompatActivity() {
         binding.rvCategories.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.rvProducts.layoutManager = GridLayoutManager(this, 4)
 
+        // 导航模式切换
         binding.btnNavTables.setOnClickListener { showTableView() }
         binding.btnNavFastFood.setOnClickListener { openFastFoodOrder() }
         binding.btnBackToTables.setOnClickListener { showTableView() }
+        updateNavModeButtons(isTableMode = true)
+
+        // 菜品搜索监听 (中文 + 拼音首字母)
+        binding.etSearchDish.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                searchKeyword = s?.toString()?.trim() ?: ""
+                binding.btnClearSearch.visibility = if (searchKeyword.isNotEmpty()) View.VISIBLE else View.GONE
+                applyProductFilter()
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+
+        binding.btnClearSearch.setOnClickListener {
+            binding.etSearchDish.setText("")
+        }
 
         binding.btnClearCart.setOnClickListener {
             cartList.clear()
@@ -100,7 +127,6 @@ class MainActivity : AppCompatActivity() {
             updateCartSummary()
         }
 
-        // 整单打折/优惠
         binding.btnWholeDiscount.setOnClickListener {
             if (cartList.isEmpty()) {
                 Toast.makeText(this, "购物车为空，无法打折", Toast.LENGTH_SHORT).show()
@@ -136,6 +162,44 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         }
+    }
+
+    // 修复模式切换按钮配色 BUG (彻底解决黑底黑字和文字丢失)
+    private fun updateNavModeButtons(isTableMode: Boolean) {
+        if (isTableMode) {
+            binding.btnNavTables.setBackgroundColor(Color.parseColor("#1E2433"))
+            binding.btnNavTables.setTextColor(Color.parseColor("#FFFFFF"))
+            binding.btnNavFastFood.setBackgroundColor(Color.parseColor("#FFFFFF"))
+            binding.btnNavFastFood.setTextColor(Color.parseColor("#1E2433"))
+        } else {
+            binding.btnNavTables.setBackgroundColor(Color.parseColor("#FFFFFF"))
+            binding.btnNavTables.setTextColor(Color.parseColor("#1E2433"))
+            binding.btnNavFastFood.setBackgroundColor(Color.parseColor("#1E2433"))
+            binding.btnNavFastFood.setTextColor(Color.parseColor("#FFFFFF"))
+        }
+    }
+
+    private fun showTableView() {
+        activeTable = null
+        activeOrderId = 0
+        cartList.clear()
+        resetWholeDiscount()
+        updateNavModeButtons(isTableMode = true)
+        binding.layoutTableOverview.visibility = View.VISIBLE
+        binding.layoutOrderScreen.visibility = View.GONE
+    }
+
+    private fun openFastFoodOrder() {
+        activeTable = null
+        activeOrderId = 0
+        cartList.clear()
+        resetWholeDiscount()
+        updateCartSummary()
+        updateNavModeButtons(isTableMode = false)
+        binding.tvOrderTableTitle.text = "模式: ⚡ 快餐直接收银"
+        binding.btnSaveTableOrder.visibility = View.GONE
+        binding.layoutTableOverview.visibility = View.GONE
+        binding.layoutOrderScreen.visibility = View.VISIBLE
     }
 
     private fun resetWholeDiscount() {
@@ -174,7 +238,7 @@ class MainActivity : AppCompatActivity() {
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
         }
         val etDeduct = EditText(this).apply {
-            hint = "立减/抹零金额 (元，如: 10 表示立减10元)"
+            hint = "立减/抹零金额 (元，如: 10)"
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
         }
         val layout = LinearLayout(this).apply {
@@ -250,31 +314,6 @@ class MainActivity : AppCompatActivity() {
                 binding.rvTableGrid.adapter = TableGridAdapter(tables)
             }
         }
-    }
-
-    private fun showTableView() {
-        activeTable = null
-        activeOrderId = 0
-        cartList.clear()
-        resetWholeDiscount()
-        binding.layoutTableOverview.visibility = View.VISIBLE
-        binding.layoutOrderScreen.visibility = View.GONE
-        binding.btnNavTables.setBackgroundColor(Color.parseColor("#1E2433"))
-        binding.btnNavFastFood.setBackgroundColor(Color.parseColor("#FFFFFF"))
-    }
-
-    private fun openFastFoodOrder() {
-        activeTable = null
-        activeOrderId = 0
-        cartList.clear()
-        resetWholeDiscount()
-        updateCartSummary()
-        binding.tvOrderTableTitle.text = "模式: ⚡ 快餐直接收银"
-        binding.btnSaveTableOrder.visibility = View.GONE
-        binding.layoutTableOverview.visibility = View.GONE
-        binding.layoutOrderScreen.visibility = View.VISIBLE
-        binding.btnNavFastFood.setBackgroundColor(Color.parseColor("#1E2433"))
-        binding.btnNavTables.setBackgroundColor(Color.parseColor("#FFFFFF"))
     }
 
     private fun startOrderForTable(table: DiningTable) {
@@ -471,26 +510,42 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // 观察分类数据 (注入【全部】选项)
     private fun observeCategories() {
         lifecycleScope.launch {
             App.instance.database.posDao().getAllCategories().collectLatest { categories ->
-                if (categories.isNotEmpty() && selectedCategoryId == -1L) {
-                    selectedCategoryId = categories[0].id
-                }
-                binding.rvCategories.adapter = CategoryTabAdapter(categories)
-                if (selectedCategoryId != -1L) {
-                    loadProducts(selectedCategoryId)
-                }
+                val allCategoryList = mutableListOf(Category(id = -1L, name = "全部", sortOrder = -1))
+                allCategoryList.addAll(categories)
+                binding.rvCategories.adapter = CategoryTabAdapter(allCategoryList)
             }
         }
     }
 
-    private fun loadProducts(catId: Long) {
+    // 观察所有菜品
+    private fun observeProducts() {
         lifecycleScope.launch {
-            App.instance.database.posDao().getProductsByCategory(catId).collectLatest { products ->
-                binding.rvProducts.adapter = ProductGridAdapter(products)
+            App.instance.database.posDao().getAllProducts().collectLatest { products ->
+                allProductsList = products
+                applyProductFilter()
             }
         }
+    }
+
+    // 核心过滤引擎：按分类 + 中文/拼音首字母实时过滤
+    private fun applyProductFilter() {
+        var result = allProductsList
+
+        // 1. 分类过滤
+        if (selectedCategoryId != -1L) {
+            result = result.filter { it.categoryId == selectedCategoryId }
+        }
+
+        // 2. 拼音首字母 / 中文字符过滤
+        if (searchKeyword.isNotEmpty()) {
+            result = result.filter { PinyinUtil.matches(it.name, searchKeyword) }
+        }
+
+        binding.rvProducts.adapter = ProductGridAdapter(result)
     }
 
     private fun addToCart(product: Product) {
@@ -524,7 +579,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- 桌台大厅适配器 ---
+    // --- 适配器 ---
     inner class TableGridAdapter(private val list: List<DiningTable>) : RecyclerView.Adapter<TableGridAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val root: View = v.findViewById(R.id.layoutCardRoot)
@@ -538,7 +593,7 @@ class MainActivity : AppCompatActivity() {
             val btnAction3: Button = v.findViewById(R.id.btnCardAction3)
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
             VH(LayoutInflater.from(parent.context).inflate(R.layout.item_table_grid, parent, false))
 
         override fun onBindViewHolder(holder: VH, position: Int) {
@@ -626,26 +681,38 @@ class MainActivity : AppCompatActivity() {
         override fun getItemCount() = list.size
     }
 
+    // 胶囊分类选项卡 (支持【全部】与高亮选中)
     inner class CategoryTabAdapter(private val list: List<Category>) : RecyclerView.Adapter<CategoryTabAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
-            val btn: Button = v.findViewById(R.id.btnCategory)
+            val root: View = v.findViewById(R.id.layoutCategoryRoot)
+            val tvName: TextView = v.findViewById(R.id.tvCategoryName)
         }
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
             VH(LayoutInflater.from(parent.context).inflate(R.layout.item_category, parent, false))
 
         override fun onBindViewHolder(holder: VH, position: Int) {
             val item = list[position]
-            holder.btn.text = item.name
-            holder.btn.isSelected = (item.id == selectedCategoryId)
-            holder.btn.setOnClickListener {
+            holder.tvName.text = item.name
+            val isSelected = (item.id == selectedCategoryId)
+
+            if (isSelected) {
+                holder.root.setBackgroundColor(Color.parseColor("#FFC300"))
+                holder.tvName.setTextColor(Color.parseColor("#111827"))
+            } else {
+                holder.root.setBackgroundColor(Color.parseColor("#FFFFFF"))
+                holder.tvName.setTextColor(Color.parseColor("#4B5563"))
+            }
+
+            holder.root.setOnClickListener {
                 selectedCategoryId = item.id
                 notifyDataSetChanged()
-                loadProducts(selectedCategoryId)
+                applyProductFilter()
             }
         }
         override fun getItemCount() = list.size
     }
 
+    // 菜品卡片适配器
     inner class ProductGridAdapter(private val list: List<Product>) : RecyclerView.Adapter<ProductGridAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val tvName: TextView = v.findViewById(R.id.tvProductName)

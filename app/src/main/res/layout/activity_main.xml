@@ -21,24 +21,28 @@
             android:textColor="#111827"
             android:textSize="20sp"/>
 
+        <!-- 模式切换按钮组 -->
         <Button
             android:id="@+id/btnNavTables"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="38dp"
             android:layout_marginStart="24dp"
             android:text="🪑 堂食桌台"
             android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#1E2433"/>
+            android:textSize="14sp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
 
         <Button
             android:id="@+id/btnNavFastFood"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="38dp"
             android:layout_marginStart="8dp"
             android:text="⚡ 快餐收银"
-            android:textColor="#111827"
-            android:backgroundTint="#FFFFFF"/>
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
 
         <View
             android:layout_width="0dp"
@@ -50,12 +54,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
-            android:text="员工: 店长"
+            android:text="员工: 收银员"
             android:textColor="#111827"
             android:textSize="15sp"
             android:textStyle="bold"/>
 
-        <!-- 权限控制：普通收银员完全隐藏此按钮 -->
+        <!-- 仅店长可见：后台管理与营业报表 -->
         <Button
             android:id="@+id/btnManage"
             android:layout_width="wrap_content"
@@ -64,7 +68,9 @@
             android:text="⚙ 后台管理"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#1E2433"/>
+            android:backgroundTint="#1E2433"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
 
         <Button
             android:id="@+id/btnReport"
@@ -74,15 +80,21 @@
             android:text="📊 营业报表"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#1E2433"/>
+            android:backgroundTint="#1E2433"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
 
+        <!-- 任何员工都可见：交班退出 -->
         <Button
             android:id="@+id/btnLogout"
             android:layout_width="wrap_content"
             android:layout_height="38dp"
             android:text="交班退出"
+            android:textStyle="bold"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#EF4444"/>
+            android:backgroundTint="#EF4444"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
     </LinearLayout>
 
     <!-- 视图1：堂食桌台全景大厅 -->
@@ -132,7 +144,7 @@
             android:layout_height="match_parent"/>
     </LinearLayout>
 
-    <!-- 视图2：点菜/折扣/结账界面 -->
+    <!-- 视图2：点菜/搜索/折扣/结账界面 -->
     <LinearLayout
         android:id="@+id/layoutOrderScreen"
         android:layout_width="match_parent"
@@ -161,7 +173,9 @@
                     android:text="← 返回桌台"
                     android:textSize="12sp"
                     android:textColor="#111827"
-                    android:backgroundTint="#E5E7EB"/>
+                    android:backgroundTint="#E5E7EB"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"/>
                 <TextView
                     android:id="@+id/tvOrderTableTitle"
                     android:layout_width="0dp"
@@ -172,7 +186,6 @@
                     android:textStyle="bold"
                     android:textColor="#111827"
                     android:textSize="15sp"/>
-                <!-- 整单打折/优惠入口 -->
                 <Button
                     android:id="@+id/btnWholeDiscount"
                     android:layout_width="wrap_content"
@@ -180,7 +193,9 @@
                     android:text="🏷 整单折扣"
                     android:textSize="12sp"
                     android:textColor="#FFFFFF"
-                    android:backgroundTint="#8B5CF6"/>
+                    android:backgroundTint="#8B5CF6"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"/>
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView
@@ -190,7 +205,7 @@
                 android:layout_weight="1"
                 android:padding="8dp"/>
 
-            <!-- 底部金额与打折状态明细 -->
+            <!-- 底部金额明细 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -250,7 +265,9 @@
                         android:layout_weight="1"
                         android:text="清空"
                         android:backgroundTint="#E5E7EB"
-                        android:textColor="#111827"/>
+                        android:textColor="#111827"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"/>
                     <Button
                         android:id="@+id/btnSaveTableOrder"
                         android:layout_width="0dp"
@@ -261,7 +278,9 @@
                         android:textStyle="bold"
                         android:textSize="16sp"
                         android:backgroundTint="#F59E0B"
-                        android:textColor="#FFFFFF"/>
+                        android:textColor="#FFFFFF"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"/>
                     <Button
                         android:id="@+id/btnPay"
                         android:layout_width="0dp"
@@ -272,12 +291,14 @@
                         android:textStyle="bold"
                         android:textSize="16sp"
                         android:backgroundTint="#FFC300"
-                        android:textColor="#111827"/>
+                        android:textColor="#111827"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"/>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
-        <!-- 右侧菜品分类与选择 (62% 宽度) -->
+        <!-- 右侧菜品分类、拼音搜索与菜品矩阵 (62% 宽度) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -285,17 +306,59 @@
             android:orientation="vertical"
             android:padding="10dp">
 
+            <!-- 搜索框：支持中文与拼音首字母过滤 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:background="#FFFFFF"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="12dp"
+                android:elevation="1dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔍"
+                    android:textSize="16sp"/>
+
+                <EditText
+                    android:id="@+id/etSearchDish"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:background="@null"
+                    android:hint="输入菜名或拼音首字母 (例如: hmj 搜黄焖鸡)"
+                    android:textColor="#111827"
+                    android:textColorHint="#9CA3AF"
+                    android:textSize="14sp"
+                    android:singleLine="true"/>
+
+                <TextView
+                    android:id="@+id/btnClearSearch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="✕"
+                    android:textSize="16sp"
+                    android:textColor="#9CA3AF"
+                    android:padding="6dp"
+                    android:visibility="gone"/>
+            </LinearLayout>
+
+            <!-- 水平分类列表 (含【全部】分类) -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvCategories"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"/>
+                android:layout_height="42dp"
+                android:layout_marginTop="8dp"/>
 
+            <!-- 菜品网格列表 -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvProducts"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:layout_marginTop="8dp"/>
+                android:layout_marginTop="6dp"/>
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

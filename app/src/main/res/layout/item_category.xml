@@ -1,10 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Button xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/btnCategory"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layoutCategoryRoot"
     android:layout_width="wrap_content"
-    android:layout_height="42dp"
-    android:layout_marginEnd="8dp"
-    android:text="分类"
-    android:backgroundTint="#FFFFFF"
-    android:textColor="#333333"
-    style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+    android:layout_height="40dp"
+    android:layout_marginEnd="10dp"
+    android:gravity="center"
+    android:paddingHorizontal="16dp"
+    android:background="#FFFFFF"
+    android:clickable="true"
+    android:focusable="true">
+
+    <TextView
+        android:id="@+id/tvCategoryName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="分类"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#374151"/>
+</LinearLayout>
