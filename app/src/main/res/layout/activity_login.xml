@@ -3,9 +3,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-    android:background="#1B202E">
+    android:background="#1E2433">
 
-    <!-- 左侧系统标志与说明 -->
+    <!-- 左侧品牌标识 -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
@@ -18,7 +18,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="美团收银 (青春版)"
-            android:textColor="#FFD100"
+            android:textColor="#FFC300"
             android:textSize="36sp"
             android:textStyle="bold" />
 
@@ -26,35 +26,35 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="纯本地单机版 | 堂食桌台与快餐系统"
-            android:textColor="#A0A5BA"
+            android:text="纯本地单机版 | 堂食桌台与快餐管理"
+            android:textColor="#9CA3AF"
             android:textSize="18sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
-            android:text="初始账号密码：\n店长 PIN: 888888\n收银员 PIN: 1234\n(支持触摸点击或电脑键盘直接输入)"
-            android:textColor="#7A819B"
+            android:text="初始账号密码：\n店长 PIN: 888888\n收银员 PIN: 1234\n(支持屏幕触控与物理键盘输入)"
+            android:textColor="#6B7280"
             android:textSize="15sp"
             android:gravity="center"
             android:lineSpacingExtra="6dp"/>
     </LinearLayout>
 
-    <!-- 右侧实体键盘区 -->
+    <!-- 右侧实体按键键盘 (纯白卡片) -->
     <LinearLayout
         android:layout_width="400dp"
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="vertical"
         android:background="#FFFFFF"
-        android:padding="24dp">
+        android:padding="28dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="请输入员工登录 PIN 码"
-            android:textColor="#111111"
+            android:textColor="#111827"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -63,40 +63,40 @@
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginTop="16dp"
-            android:background="#F0F2F5"
+            android:background="#F3F4F6"
             android:gravity="center"
             android:hint="请输入PIN码"
-            android:textColorHint="#9E9E9E"
-            android:textColor="#000000"
+            android:textColorHint="#9CA3AF"
+            android:textColor="#111827"
             android:textSize="32sp"
             android:textStyle="bold"
             android:letterSpacing="0.3" />
 
-        <!-- 3x4 实体按键网格 (使用 AppCompatButton 强制显色) -->
+        <!-- 3x4 实体按键网格 -->
         <GridLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:columnCount="3">
 
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn1" text="1" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:textSize="28sp" android:textStyle="bold" android:textColor="#000000" android:background="#F0F2F5"/>
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn2" text="2" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:textSize="28sp" android:textStyle="bold" android:textColor="#000000" android:background="#F0F2F5"/>
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn3" text="3" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:textSize="28sp" android:textStyle="bold" android:textColor="#000000" android:background="#F0F2F5"/>
+            <TextView android:id="@+id/btn1" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/btn2" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/btn3" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
 
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn4" text="4" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:textSize="28sp" android:textStyle="bold" android:textColor="#000000" android:background="#F0F2F5"/>
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn5" text="5" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:textSize="28sp" android:textStyle="bold" android:textColor="#000000" android:background="#F0F2F5"/>
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn6" text="6" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:textSize="28sp" android:textStyle="bold" android:textColor="#000000" android:background="#F0F2F5"/>
+            <TextView android:id="@+id/btn4" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/btn5" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/btn6" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
 
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn7" text="7" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:textSize="28sp" android:textStyle="bold" android:textColor="#000000" android:background="#F0F2F5"/>
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn8" text="8" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:textSize="28sp" android:textStyle="bold" android:textColor="#000000" android:background="#F0F2F5"/>
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn9" text="9" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:textSize="28sp" android:textStyle="bold" android:textColor="#000000" android:background="#F0F2F5"/>
+            <TextView android:id="@+id/btn7" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/btn8" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/btn9" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
 
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/btnClear" text="清空" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:textSize="20sp" android:textStyle="bold" android:textColor="#FF3B30" android:background="#FEECEC"/>
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn0" text="0" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:textSize="28sp" android:textStyle="bold" android:textColor="#000000" android:background="#F0F2F5"/>
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/btnDelete" text="←" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="62dp" android:layout_margin="4dp" android:textSize="26sp" android:textStyle="bold" android:textColor="#000000" android:background="#E2E5EC"/>
+            <TextView android:id="@+id/btnClear" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="18sp" android:textStyle="bold" android:background="#FEE2E2" android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/btn0" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="26sp" android:textStyle="bold" android:background="#F3F4F6" android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/btnDelete" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_height="64dp" android:layout_margin="4dp" android:gravity="center" android:textSize="22sp" android:textStyle="bold" android:background="#E5E7EB" android:clickable="true" android:focusable="true"/>
         </GridLayout>
 
-        <androidx.appcompat.widget.AppCompatButton
+        <Button
             android:id="@+id/btnLogin"
             android:layout_width="match_parent"
             android:layout_height="56dp"
@@ -104,7 +104,7 @@
             android:text="进入系统"
             android:textStyle="bold"
             android:textSize="20sp"
-            android:background="#FFD100"
-            android:textColor="#111111"/>
+            android:backgroundTint="#FFC300"
+            android:textColor="#111827"/>
     </LinearLayout>
 </LinearLayout>
