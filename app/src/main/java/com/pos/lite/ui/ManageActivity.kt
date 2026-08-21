@@ -3,7 +3,6 @@ package com.pos.lite.ui
 import android.content.DialogInterface
 import android.os.Bundle
 import android.text.InputType
-import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -59,7 +58,7 @@ class ManageActivity : AppCompatActivity() {
                 .show()
         }
 
-        // 2. 新增菜品 (纯动态布局，无需任何额外XML)
+        // 2. 新增菜品
         binding.btnAddProduct.setOnClickListener {
             showAddProductDialog()
         }
