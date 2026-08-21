@@ -1,6 +1,7 @@
 package com.pos.lite.ui
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.KeyEvent
 import android.widget.Button
@@ -29,19 +30,32 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setupPinKeypad() {
-        val numMap = mapOf(
-            R.id.btn0 to "0", R.id.btn1 to "1", R.id.btn2 to "2",
-            R.id.btn3 to "3", R.id.btn4 to "4", R.id.btn5 to "5",
-            R.id.btn6 to "6", R.id.btn7 to "7", R.id.btn8 to "8",
-            R.id.btn9 to "9"
+        // 显式数字配置：彻底杜绝主题样式将字符变白
+        val keyConfig = listOf(
+            R.id.btn1 to "1", R.id.btn2 to "2", R.id.btn3 to "3",
+            R.id.btn4 to "4", R.id.btn5 to "5", R.id.btn6 to "6",
+            R.id.btn7 to "7", R.id.btn8 to "8", R.id.btn9 to "9",
+            R.id.btnClear to "清空", R.id.btn0 to "0", R.id.btnDelete to "⌫"
         )
 
-        for ((id, num) in numMap) {
-            findViewById<Button>(id).setOnClickListener { appendDigit(num) }
+        for ((id, textVal) in keyConfig) {
+            val tv = findViewById<TextView>(id)
+            tv.text = textVal
+            if (id == R.id.btnClear) {
+                tv.setTextColor(Color.parseColor("#EF4444")) // 红色清空
+            } else {
+                tv.setTextColor(Color.parseColor("#111827")) // 纯黑高对比度
+            }
+
+            tv.setOnClickListener {
+                when (id) {
+                    R.id.btnClear -> clearDigits()
+                    R.id.btnDelete -> deleteDigit()
+                    else -> appendDigit(textVal)
+                }
+            }
         }
 
-        findViewById<Button>(R.id.btnDelete).setOnClickListener { deleteDigit() }
-        findViewById<Button>(R.id.btnClear).setOnClickListener { clearDigits() }
         findViewById<Button>(R.id.btnLogin).setOnClickListener { submitLogin() }
     }
 
