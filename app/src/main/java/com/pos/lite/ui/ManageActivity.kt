@@ -147,7 +147,7 @@ class ManageActivity : AppCompatActivity() {
         }
     }
 
-    // 核心改进：选择分类彻底改用【大按钮网格矩阵】选择
+    // 分类按钮网格选择器
     private fun showCategoryButtonGridSelector(categories: List<Category>, onSelected: (Category) -> Unit) {
         val dialogView = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -156,7 +156,7 @@ class ManageActivity : AppCompatActivity() {
 
         val tv = TextView(this).apply {
             text = "点击下方分类按钮快速选择："
-            textSize = 14sp
+            textSize = 14f // 修正为 Float
             setTextColor(Color.parseColor("#4B5563"))
         }
         dialogView.addView(tv)
@@ -177,7 +177,7 @@ class ManageActivity : AppCompatActivity() {
         for (cat in categories) {
             val btn = Button(this).apply {
                 text = cat.name
-                textSize = 15sp
+                textSize = 15f // 修正为 Float
                 setTextColor(Color.parseColor("#111827"))
                 setBackgroundColor(Color.parseColor("#F3F4F6"))
                 layoutParams = GridLayout.LayoutParams().apply {
@@ -228,7 +228,6 @@ class ManageActivity : AppCompatActivity() {
                 setBackgroundColor(Color.parseColor("#FEF3C7"))
             }
 
-            // 点击分类弹出大按钮矩阵选择！
             btnCat.setOnClickListener {
                 showCategoryButtonGridSelector(categories) { selected ->
                     chosenCat = selected
@@ -323,7 +322,7 @@ class ManageActivity : AppCompatActivity() {
             }.setNegativeButton("取消", null).show()
     }
 
-    // 3. 员工增改 (脱敏隐藏明文)
+    // 3. 员工增改
     private fun showEditStaffDialog(staff: Staff?) {
         val etName = EditText(this).apply {
             hint = "员工姓名"
@@ -363,7 +362,7 @@ class ManageActivity : AppCompatActivity() {
             }.setNegativeButton("取消", null).show()
     }
 
-    // 4. 桌台增改 (区域大按钮选择)
+    // 4. 桌台增改
     private fun showEditTableDialog(table: DiningTable?) {
         val areas = arrayOf("大厅", "包厢", "卡座", "露台")
         var selectedArea = table?.area ?: "大厅"
@@ -379,7 +378,6 @@ class ManageActivity : AppCompatActivity() {
         }
 
         btnArea.setOnClickListener {
-            // 区域选择也用大按钮矩阵！
             val gridView = LinearLayout(this@ManageActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 setPadding(30, 20, 30, 20)
@@ -575,7 +573,6 @@ class ManageActivity : AppCompatActivity() {
         override fun getItemCount() = list.size
     }
 
-    // 员工管理：密码脱敏
     inner class StaffListAdapter(private val list: List<Staff>) : RecyclerView.Adapter<StaffListAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val tvTitle: TextView = v.findViewById(R.id.tvRowTitle)
@@ -589,12 +586,11 @@ class ManageActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: VH, position: Int) {
             val staff = list[position]
             holder.tvTitle.text = staff.name + (if (staff.role == "ADMIN") " (店长·唯一管理账号)" else " (收银员)")
-            // 核心脱敏：使用黑点掩码，不再明文展示
             val maskedPin = "●".repeat(staff.pinCode.length.coerceAtLeast(4))
             holder.tvSubtitle.text = "登录PIN密码: $maskedPin (已安全加密)"
 
             if (staff.role == "ADMIN") {
-                holder.btnDelete.visibility = View.GONE // 店长不可被删除
+                holder.btnDelete.visibility = View.GONE
             } else {
                 holder.btnDelete.visibility = View.VISIBLE
             }
@@ -615,7 +611,6 @@ class ManageActivity : AppCompatActivity() {
         override fun getItemCount() = list.size
     }
 
-    // 桌台管理：色彩与区域聚类展示
     inner class TableListAdapter(private val list: List<DiningTable>) : RecyclerView.Adapter<TableListAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val tvTitle: TextView = v.findViewById(R.id.tvRowTitle)

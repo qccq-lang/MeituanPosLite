@@ -87,7 +87,7 @@ class MainActivity : AppCompatActivity() {
         val roleDesc = if (staff?.role == "ADMIN") "店长" else "收银员"
         binding.tvCashierInfo.text = "员工: $staffName ($roleDesc)"
 
-        // 核心权限隔离：普通收银员完全隐藏后台管理和营业报表！
+        // 权限隔离
         if (staff?.role == "ADMIN") {
             binding.btnManage.visibility = View.VISIBLE
             binding.btnReport.visibility = View.VISIBLE
@@ -125,7 +125,6 @@ class MainActivity : AppCompatActivity() {
             updateCartSummary()
         }
 
-        // 整单打折大按钮矩阵
         binding.btnWholeDiscount.setOnClickListener {
             if (cartList.isEmpty()) {
                 Toast.makeText(this, "购物车为空，无法打折", Toast.LENGTH_SHORT).show()
@@ -206,13 +205,12 @@ class MainActivity : AppCompatActivity() {
         wholeDiscountNote = ""
     }
 
-    // 核心改进：纯大按钮网格打折弹窗 (100% 动态加载 DB 折扣，带保底预设)
+    // 纯按钮网格打折弹窗
     private fun showDiscountButtonGridDialog(isWholeOrder: Boolean, targetItem: CartItemModel?) {
         lifecycleScope.launch(Dispatchers.IO) {
             val dao = App.instance.database.posDao()
             var configs = dao.getDiscountConfigsList()
 
-            // 保底机制：若数据库首次未就绪，自动填补默认按键
             if (configs.isEmpty()) {
                 configs = listOf(
                     DiscountConfig(name = "95折", type = "RATE", value = 0.95),
@@ -237,12 +235,11 @@ class MainActivity : AppCompatActivity() {
                 val title = if (isWholeOrder) "🏷 选择整单优惠打折" else "🏷 【${targetItem?.product?.name}】单品优惠"
                 val tvTip = TextView(this@MainActivity).apply {
                     text = "点击下方快捷按钮立即应用优惠折扣："
-                    textSize = 14sp
+                    textSize = 14f // 修正为 Float
                     setTextColor(Color.parseColor("#4B5563"))
                 }
                 dialogView.addView(tvTip)
 
-                // 4列大按钮网格
                 val grid = GridLayout(this@MainActivity).apply {
                     columnCount = 3
                     layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
@@ -260,7 +257,7 @@ class MainActivity : AppCompatActivity() {
                 for (cfg in configs) {
                     val btn = Button(this@MainActivity).apply {
                         text = cfg.name
-                        textSize = 15sp
+                        textSize = 15f // 修正为 Float
                         setTextColor(Color.parseColor("#1E2433"))
                         setBackgroundColor(Color.parseColor("#F3F4F6"))
                         layoutParams = GridLayout.LayoutParams().apply {
@@ -279,14 +276,13 @@ class MainActivity : AppCompatActivity() {
                 }
                 dialogView.addView(grid)
 
-                // 底部操作：自定义立减与恢复原价
                 val bottomActions = LinearLayout(this@MainActivity).apply {
                     orientation = LinearLayout.HORIZONTAL
                 }
 
                 val btnCustom = Button(this@MainActivity).apply {
                     text = "✏ 自定义减免..."
-                    textSize = 13sp
+                    textSize = 13f // 修正为 Float
                     setTextColor(Color.parseColor("#2563EB"))
                     setBackgroundColor(Color.parseColor("#EFF6FF"))
                     layoutParams = LinearLayout.LayoutParams(0, 100, 1f).apply { marginEnd = 8 }
@@ -298,7 +294,7 @@ class MainActivity : AppCompatActivity() {
 
                 val btnReset = Button(this@MainActivity).apply {
                     text = "🔄 恢复原价"
-                    textSize = 13sp
+                    textSize = 13f // 修正为 Float
                     setTextColor(Color.parseColor("#EF4444"))
                     setBackgroundColor(Color.parseColor("#FEE2E2"))
                     layoutParams = LinearLayout.LayoutParams(0, 100, 1f)
@@ -666,7 +662,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- 桌台大厅卡片适配器 (带色彩分区) ---
+    // --- 桌台大厅卡片适配器 ---
     inner class TableGridAdapter(private val list: List<DiningTable>) : RecyclerView.Adapter<TableGridAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val root: View = v.findViewById(R.id.layoutCardRoot)
@@ -742,12 +738,12 @@ class MainActivity : AppCompatActivity() {
                     }
                     holder.btnAction3.visibility = View.GONE
                 }
-                else -> { // 空闲 (按区域色彩渲染)
+                else -> {
                     val areaBgColor = when (table.area) {
-                        "包厢" -> "#FEF9C3" // 琥珀金
-                        "卡座" -> "#FCE7F3" // 柔粉
-                        "露台" -> "#CCFBF1" // 湖蓝绿
-                        else -> "#E6F9F0"   // 大厅清新绿
+                        "包厢" -> "#FEF9C3"
+                        "卡座" -> "#FCE7F3"
+                        "露台" -> "#CCFBF1"
+                        else -> "#E6F9F0"
                     }
                     holder.root.setBackgroundColor(Color.parseColor(areaBgColor))
                     holder.tvStatusBadge.text = "🟢 空闲"
