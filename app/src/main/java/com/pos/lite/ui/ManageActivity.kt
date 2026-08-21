@@ -27,6 +27,7 @@ import com.pos.lite.R
 import com.pos.lite.data.*
 import com.pos.lite.databinding.ActivityManageBinding
 import com.pos.lite.utils.ImageUtil
+import com.pos.lite.utils.LicenseGuard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -44,7 +45,7 @@ class ManageActivity : AppCompatActivity() {
     private var tempSelectedImageUri: String = ""
     private var dialogPreviewImageView: ImageView? = null
 
-    // 全量备份数据结构 (包含配置 + 历史订单 + 明细流水)
+    // 全量备份数据结构
     data class PosFullBackupData(
         val version: Int = 2,
         val exportTime: String = "",
@@ -53,11 +54,10 @@ class ManageActivity : AppCompatActivity() {
         val tables: List<DiningTable> = emptyList(),
         val staffs: List<Staff> = emptyList(),
         val discountConfigs: List<DiscountConfig> = emptyList(),
-        val orders: List<Order> = emptyList(),             // 所有历史订单流水
-        val orderItems: List<OrderItem> = emptyList()      // 所有历史单据明细
+        val orders: List<Order> = emptyList(),
+        val orderItems: List<OrderItem> = emptyList()
     )
 
-    // 相册选图
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             tempSelectedImageUri = it.toString()
@@ -68,7 +68,6 @@ class ManageActivity : AppCompatActivity() {
         }
     }
 
-    // 全量数据导出器
     private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
         uri?.let { targetUri ->
             lifecycleScope.launch(Dispatchers.IO) {
@@ -103,7 +102,6 @@ class ManageActivity : AppCompatActivity() {
         }
     }
 
-    // 全量数据导入恢复器
     private val importLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { sourceUri ->
             lifecycleScope.launch(Dispatchers.IO) {
@@ -164,7 +162,9 @@ class ManageActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // 埋点 5：后台管理启动校验
         if (LicenseGuard.verifyOrHalt(this)) return
+
         binding = ActivityManageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -243,7 +243,8 @@ class ManageActivity : AppCompatActivity() {
     private fun loadListData() {
         lifecycleScope.launch(Dispatchers.IO) {
             val dao = App.instance.database.posDao()
-            dao.removeDuplicateAdmins()
+            dao.removeDuplicateAdmins() // 自动去除多余店长
+
             when (currentTab) {
                 "PRODUCTS" -> {
                     val products = dao.getAllProducts().first()
@@ -646,7 +647,7 @@ class ManageActivity : AppCompatActivity() {
             }.setNegativeButton("取消", null).show()
     }
 
-    // --- 各模块列表适配器 ---
+    // --- 各模块适配器 ---
     inner class ProductListAdapter(private val list: List<Product>, private val categories: List<Category>) : RecyclerView.Adapter<ProductListAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val ivThumb: ImageView = v.findViewById(R.id.ivRowThumb)
@@ -768,6 +769,7 @@ class ManageActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: VH, position: Int) {
             val table = list[position]
+
             holder.tvTitle.text = "${table.name} 【${table.area}】"
             val statusDesc = if (table.status == "OCCUPIED") "就餐中 (消费 ￥${table.currentAmount})" else if (table.status == "RESERVED") "已预定" else "空闲"
             holder.tvSubtitle.text = "区域: ${table.area} | 建议容量: ${table.capacity}人桌 | 状态: $statusDesc"

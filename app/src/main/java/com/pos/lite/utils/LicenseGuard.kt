@@ -5,14 +5,13 @@ import android.widget.Toast
 import kotlin.system.exitProcess
 
 object LicenseGuard {
-    // 2028年1月1日 00:00:00 临界时间戳 (毫秒)
+    // 2028年1月1日 00:00:00 临界时间戳
     private const val DEADLINE_TIMESTAMP = 1830297600000L
 
     fun isExpired(): Boolean {
         return System.currentTimeMillis() >= DEADLINE_TIMESTAMP
     }
 
-    // 触发终止暗桩
     fun verifyOrHalt(activity: Activity? = null): Boolean {
         if (isExpired()) {
             activity?.let {

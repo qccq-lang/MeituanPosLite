@@ -29,6 +29,7 @@ import com.pos.lite.data.*
 import com.pos.lite.databinding.ActivityMainBinding
 import com.pos.lite.print.PosPrinterHelper
 import com.pos.lite.utils.ImageUtil
+import com.pos.lite.utils.LicenseGuard
 import com.pos.lite.utils.PinyinUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -75,7 +76,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // 埋点 3-A：前台启动校验
         if (LicenseGuard.verifyOrHalt(this)) return
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -87,7 +90,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // 埋点 3：从后台切回前台时校验
+        // 埋点 3-B：从后台切回前台校验
         if (LicenseGuard.verifyOrHalt(this)) return
     }
 
@@ -404,7 +407,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 直接开台
     private fun startOrderForTable(table: DiningTable) {
         activeTable = table
         activeOrderId = 0
@@ -419,7 +421,6 @@ class MainActivity : AppCompatActivity() {
         binding.layoutOrderScreen.visibility = View.VISIBLE
     }
 
-    // 预定点菜 (直接进入点餐界面)
     private fun startPreOrderForReservation(table: DiningTable) {
         activeTable = table
         activeOrderId = 0
@@ -566,8 +567,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun completeOrderAndClearTable(payType: String, totalAmount: Double, originalAmount: Double) {
+        // 埋点 4：结账交易发生时强校验
         if (LicenseGuard.verifyOrHalt(this)) return
-        
+
         val table = activeTable
         val tableName = table?.name ?: "快餐"
         val discountAmount = Math.max(0.0, originalAmount - totalAmount)
@@ -689,7 +691,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- 桌台大厅适配器 (3按键直接响应：开台、预定、预定点菜，零二次弹窗) ---
+    // --- 桌台大厅适配器 ---
     inner class TableGridAdapter(private val list: List<DiningTable>) : RecyclerView.Adapter<TableGridAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val root: View = v.findViewById(R.id.layoutCardRoot)
@@ -795,7 +797,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-                else -> { // 空闲状态
+                else -> {
                     val areaBgColor = when (table.area) {
                         "包厢" -> "#FEF9C3"
                         "卡座" -> "#FCE7F3"
@@ -808,12 +810,10 @@ class MainActivity : AppCompatActivity() {
                     holder.tvTableInfo.text = "桌位空闲就绪"
                     holder.tvTableAmount.visibility = View.GONE
 
-                    // 按钮1：开台
                     holder.btnAction1.text = "开台"
                     holder.btnAction1.setBackgroundColor(Color.parseColor("#059669"))
                     holder.btnAction1.setOnClickListener { startOrderForTable(table) }
 
-                    // 按钮2：预定
                     holder.btnAction2.text = "预定"
                     holder.btnAction2.setBackgroundColor(Color.parseColor("#2563EB"))
                     holder.btnAction2.setOnClickListener {
@@ -823,7 +823,6 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
 
-                    // 按钮3：预点 (直接进入预定点菜)
                     holder.btnAction3.visibility = View.VISIBLE
                     holder.btnAction3.text = "预点"
                     holder.btnAction3.setBackgroundColor(Color.parseColor("#8B5CF6"))
