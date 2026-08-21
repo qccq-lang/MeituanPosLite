@@ -2,20 +2,20 @@
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="170dp"
     android:layout_margin="8dp"
-    app:cardCornerRadius="10dp"
+    app:cardCornerRadius="12dp"
     app:cardElevation="3dp">
 
     <LinearLayout
         android:id="@+id/layoutCardRoot"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         android:padding="12dp"
-        android:background="#E8F5E9">
+        android:background="#E6F9F0">
 
-        <!-- 1. 桌台基本信息 (桌号、状态、金额) -->
+        <!-- 顶部：桌号与状态徽标 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -29,87 +29,113 @@
                 android:text="A01"
                 android:textSize="22sp"
                 android:textStyle="bold"
-                android:textColor="#222222"/>
+                android:textColor="#111827"/>
 
             <TextView
-                android:id="@+id/tvTableStatus"
-                android:layout_width="0dp"
+                android:id="@+id/tvTableCapacity"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="8dp"
-                android:text="● 空闲 (4人)"
-                android:textSize="14sp"
+                android:layout_marginStart="6dp"
+                android:text="(4人桌)"
+                android:textSize="13sp"
+                android:textColor="#6B7280"/>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"/>
+
+            <!-- 胶囊状态标签 -->
+            <TextView
+                android:id="@+id/tvStatusBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="3dp"
+                android:text="🟢 空闲"
+                android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="#2E7D32"/>
+                android:textColor="#059669"
+                android:background="#FFFFFF"/>
+        </LinearLayout>
+
+        <!-- 中部：动态状态提示或消费金额 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvTableInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="桌位空闲，可开台点单"
+                android:textSize="13sp"
+                android:textColor="#4B5563"/>
 
             <TextView
                 android:id="@+id/tvTableAmount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
                 android:text="￥0.00"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="#E65100"
+                android:textColor="#D97706"
                 android:visibility="gone"/>
         </LinearLayout>
 
-        <!-- 分割线 (展开时显示) -->
         <View
-            android:id="@+id/viewDivider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="8dp"
-            android:background="#DCE0E6"
-            android:visibility="gone"/>
+            android:background="#E5E7EB"
+            android:layout_marginVertical="6dp"/>
 
-        <!-- 2. 点击展开的功能操作栏 (直接在桌台下方操作) -->
+        <!-- 底部：卡片内置操作栏（绝无中间遮挡弹窗） -->
         <LinearLayout
-            android:id="@+id/layoutActions"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
             android:orientation="horizontal"
-            android:visibility="gone">
+            android:gravity="center_vertical">
 
-            <!-- 动作按钮 1 (开台/加菜) -->
             <Button
-                android:id="@+id/btnAction1"
+                android:id="@+id/btnCardAction1"
                 android:layout_width="0dp"
-                android:layout_height="40dp"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:layout_marginEnd="4dp"
-                android:text="开台点餐"
-                android:textSize="13sp"
+                android:text="🍽 开台点餐"
+                android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#FFFFFF"
-                android:backgroundTint="#2E7D32"
+                android:backgroundTint="#059669"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"/>
 
-            <!-- 动作按钮 2 (结账/预定) -->
             <Button
-                android:id="@+id/btnAction2"
+                android:id="@+id/btnCardAction2"
                 android:layout_width="0dp"
-                android:layout_height="40dp"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:layout_marginEnd="4dp"
-                android:text="设为预定"
-                android:textSize="13sp"
+                android:text="📅 设为预定"
+                android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#FFFFFF"
-                android:backgroundTint="#1565C0"
+                android:backgroundTint="#2563EB"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"/>
 
-            <!-- 动作按钮 3 (清台/撤单) -->
             <Button
-                android:id="@+id/btnAction3"
+                android:id="@+id/btnCardAction3"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="match_parent"
                 android:text="清台"
-                android:textSize="13sp"
-                android:textColor="#FFFFFF"
-                android:backgroundTint="#FF3B30"
+                android:textSize="12sp"
+                android:textColor="#EF4444"
+                android:backgroundTint="#FEE2E2"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:visibility="gone"/>
