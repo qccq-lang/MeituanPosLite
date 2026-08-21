@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity() {
 
     private var activeTable: DiningTable? = null
     private var activeOrderId: Long = 0
+    private var expandedTableId: Long = -1 // 当前展开操作栏的桌台ID
 
     data class CartItemModel(val product: Product, var count: Int)
 
@@ -127,65 +128,20 @@ class MainActivity : AppCompatActivity() {
         binding.layoutOrderScreen.visibility = View.VISIBLE
     }
 
-    private fun onTableClicked(table: DiningTable) {
+    // 进入开台点餐
+    private fun startOrderForTable(table: DiningTable) {
         activeTable = table
-        when (table.status) {
-            "IDLE" -> {
-                activeOrderId = 0
-                cartList.clear()
-                updateCartSummary()
-                binding.tvOrderTableTitle.text = "桌台: ${table.name} (空闲·新开台)"
-                binding.btnSaveTableOrder.visibility = View.VISIBLE
-                binding.btnSaveTableOrder.text = "下单开台"
-                binding.layoutTableOverview.visibility = View.GONE
-                binding.layoutOrderScreen.visibility = View.VISIBLE
-            }
-            "OCCUPIED" -> {
-                showOccupiedTableDialog(table)
-            }
-            "RESERVED" -> {
-                AlertDialog.Builder(this)
-                    .setTitle("桌台: ${table.name} (已预定)")
-                    .setItems(arrayOf("▶ 确认到店·开始点餐", "❌ 取消预定")) { _, which ->
-                        if (which == 0) {
-                            table.status = "IDLE"
-                            onTableClicked(table)
-                        } else {
-                            table.status = "IDLE"
-                            lifecycleScope.launch(Dispatchers.IO) {
-                                App.instance.database.posDao().updateTable(table)
-                            }
-                        }
-                    }.show()
-            }
-        }
+        activeOrderId = 0
+        cartList.clear()
+        updateCartSummary()
+        binding.tvOrderTableTitle.text = "桌台: ${table.name} (空闲·新开台)"
+        binding.btnSaveTableOrder.visibility = View.VISIBLE
+        binding.btnSaveTableOrder.text = "下单开台"
+        binding.layoutTableOverview.visibility = View.GONE
+        binding.layoutOrderScreen.visibility = View.VISIBLE
     }
 
-    private fun showOccupiedTableDialog(table: DiningTable) {
-        val total = table.currentAmount
-        AlertDialog.Builder(this)
-            .setTitle("桌台: ${table.name} 【就餐中·已消费 ￥$total】")
-            .setItems(arrayOf("➕ 查看账单 / 继续加菜", "💰 结账收款 (清台)", "🚫 撤销订单 (清空桌台)")) { _, which ->
-                when (which) {
-                    0 -> loadOccupiedTableOrder(table)
-                    1 -> {
-                        loadOccupiedTableOrder(table) {
-                            showPaymentDialog()
-                        }
-                    }
-                    2 -> {
-                        lifecycleScope.launch(Dispatchers.IO) {
-                            val dao = App.instance.database.posDao()
-                            table.status = "IDLE"
-                            table.currentOrderId = 0
-                            table.currentAmount = 0.0
-                            dao.updateTable(table)
-                        }
-                    }
-                }
-            }.show()
-    }
-
+    // 读取就餐中订单进行加菜或结账
     private fun loadOccupiedTableOrder(table: DiningTable, onLoaded: (() -> Unit)? = null) {
         activeTable = table
         activeOrderId = table.currentOrderId
@@ -252,7 +208,7 @@ class MainActivity : AppCompatActivity() {
             dao.updateTable(table)
 
             withContext(Dispatchers.Main) {
-                Toast.makeText(this@MainActivity, "桌台 [${table.name}] 挂单成功！当前总计: ￥$totalAmount", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "桌台 [${table.name}] 挂单成功！总额: ￥$totalAmount", Toast.LENGTH_SHORT).show()
                 showTableView()
             }
         }
@@ -367,11 +323,18 @@ class MainActivity : AppCompatActivity() {
         binding.tvTotalAmount.text = String.format("￥%.2f", totalAmount)
     }
 
+    // --- 桌台内嵌式操作网格适配器 (点击在卡片内展开操作按钮) ---
     inner class TableGridAdapter(private val list: List<DiningTable>) : RecyclerView.Adapter<TableGridAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
+            val root: View = v.findViewById(R.id.layoutCardRoot)
             val tvName: TextView = v.findViewById(R.id.tvTableName)
             val tvStatus: TextView = v.findViewById(R.id.tvTableStatus)
             val tvAmount: TextView = v.findViewById(R.id.tvTableAmount)
+            val divider: View = v.findViewById(R.id.viewDivider)
+            val layoutActions: View = v.findViewById(R.id.layoutActions)
+            val btnAction1: Button = v.findViewById(R.id.btnAction1)
+            val btnAction2: Button = v.findViewById(R.id.btnAction2)
+            val btnAction3: Button = v.findViewById(R.id.btnAction3)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
@@ -381,47 +344,96 @@ class MainActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: VH, position: Int) {
             val table = list[position]
+            val isExpanded = (table.id == expandedTableId)
+
             holder.tvName.text = table.name
 
             when (table.status) {
                 "OCCUPIED" -> {
-                    holder.itemView.setBackgroundColor(Color.parseColor("#FFF3E0"))
+                    holder.root.setBackgroundColor(Color.parseColor("#FFF3E0"))
                     holder.tvStatus.text = "● 就餐中 (${table.capacity}人)"
                     holder.tvStatus.setTextColor(Color.parseColor("#E65100"))
                     holder.tvAmount.visibility = View.VISIBLE
                     holder.tvAmount.text = String.format("￥%.2f", table.currentAmount)
+
+                    // 展开时设置就餐中的功能按键
+                    holder.btnAction1.text = "加菜/查单"
+                    holder.btnAction1.setBackgroundColor(Color.parseColor("#FF9800"))
+                    holder.btnAction1.setOnClickListener { loadOccupiedTableOrder(table) }
+
+                    holder.btnAction2.text = "结账收款"
+                    holder.btnAction2.setBackgroundColor(Color.parseColor("#4CAF50"))
+                    holder.btnAction2.setOnClickListener {
+                        loadOccupiedTableOrder(table) { showPaymentDialog() }
+                    }
+
+                    holder.btnAction3.visibility = View.VISIBLE
+                    holder.btnAction3.text = "清台"
+                    holder.btnAction3.setOnClickListener {
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            table.status = "IDLE"
+                            table.currentOrderId = 0
+                            table.currentAmount = 0.0
+                            App.instance.database.posDao().updateTable(table)
+                        }
+                    }
                 }
                 "RESERVED" -> {
-                    holder.itemView.setBackgroundColor(Color.parseColor("#E3F2FD"))
+                    holder.root.setBackgroundColor(Color.parseColor("#E3F2FD"))
                     holder.tvStatus.text = "● 已预定"
                     holder.tvStatus.setTextColor(Color.parseColor("#1565C0"))
                     holder.tvAmount.visibility = View.GONE
+
+                    holder.btnAction1.text = "到店开台"
+                    holder.btnAction1.setBackgroundColor(Color.parseColor("#2E7D32"))
+                    holder.btnAction1.setOnClickListener {
+                        table.status = "IDLE"
+                        startOrderForTable(table)
+                    }
+
+                    holder.btnAction2.text = "取消预定"
+                    holder.btnAction2.setBackgroundColor(Color.parseColor("#78909C"))
+                    holder.btnAction2.setOnClickListener {
+                        table.status = "IDLE"
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            App.instance.database.posDao().updateTable(table)
+                        }
+                    }
+                    holder.btnAction3.visibility = View.GONE
                 }
-                else -> {
-                    holder.itemView.setBackgroundColor(Color.parseColor("#E8F5E9"))
+                else -> { // 空闲
+                    holder.root.setBackgroundColor(Color.parseColor("#E8F5E9"))
                     holder.tvStatus.text = "● 空闲 (${table.capacity}人)"
                     holder.tvStatus.setTextColor(Color.parseColor("#2E7D32"))
                     holder.tvAmount.visibility = View.GONE
+
+                    holder.btnAction1.text = "开台点餐"
+                    holder.btnAction1.setBackgroundColor(Color.parseColor("#2E7D32"))
+                    holder.btnAction1.setOnClickListener { startOrderForTable(table) }
+
+                    holder.btnAction2.text = "设为预定"
+                    holder.btnAction2.setBackgroundColor(Color.parseColor("#1565C0"))
+                    holder.btnAction2.setOnClickListener {
+                        table.status = "RESERVED"
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            App.instance.database.posDao().updateTable(table)
+                        }
+                    }
+                    holder.btnAction3.visibility = View.GONE
                 }
             }
 
-            holder.itemView.setOnClickListener { onTableClicked(table) }
+            // 控制卡片下方操作栏展开/折叠
+            holder.divider.visibility = if (isExpanded) View.VISIBLE else View.GONE
+            holder.layoutActions.visibility = if (isExpanded) View.VISIBLE else View.GONE
 
-            holder.itemView.setOnLongClickListener {
-                if (table.status == "IDLE") {
-                    AlertDialog.Builder(this@MainActivity)
-                        .setTitle("桌台: ${table.name}")
-                        .setMessage("是否将此桌台标记为【已预定】？")
-                        .setPositiveButton("设为预定") { _, _ ->
-                            table.status = "RESERVED"
-                            lifecycleScope.launch(Dispatchers.IO) {
-                                App.instance.database.posDao().updateTable(table)
-                            }
-                        }.setNegativeButton("取消", null).show()
-                }
-                true
+            // 点击卡片切换展开状态
+            holder.itemView.setOnClickListener {
+                expandedTableId = if (isExpanded) -1 else table.id
+                notifyDataSetChanged()
             }
         }
+
         override fun getItemCount() = list.size
     }
 
