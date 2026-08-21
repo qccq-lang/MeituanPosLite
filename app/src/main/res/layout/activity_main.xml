@@ -5,11 +5,11 @@
     android:orientation="vertical"
     android:background="#F0F2F5">
 
-    <!-- 顶部全屏黄色导航栏 -->
+    <!-- 顶部黄色导航栏 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="#FFD100"
+        android:background="#FFC300"
         android:gravity="center_vertical"
         android:paddingHorizontal="16dp">
 
@@ -18,10 +18,9 @@
             android:layout_height="wrap_content"
             android:text="美团收银 (青春版)"
             android:textStyle="bold"
-            android:textColor="#222222"
+            android:textColor="#111827"
             android:textSize="20sp"/>
 
-        <!-- 模式切换选项卡 (堂食桌台大厅 vs 快餐外卖) -->
         <Button
             android:id="@+id/btnNavTables"
             android:layout_width="wrap_content"
@@ -30,7 +29,7 @@
             android:text="🪑 堂食桌台"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#2C344B"/>
+            android:backgroundTint="#1E2433"/>
 
         <Button
             android:id="@+id/btnNavFastFood"
@@ -38,7 +37,7 @@
             android:layout_height="40dp"
             android:layout_marginStart="8dp"
             android:text="⚡ 快餐收银"
-            android:textColor="#222222"
+            android:textColor="#111827"
             android:backgroundTint="#FFFFFF"/>
 
         <View
@@ -52,10 +51,11 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
             android:text="员工: 店长"
-            android:textColor="#222222"
+            android:textColor="#111827"
             android:textSize="15sp"
             android:textStyle="bold"/>
 
+        <!-- 权限控制：普通收银员完全隐藏此按钮 -->
         <Button
             android:id="@+id/btnManage"
             android:layout_width="wrap_content"
@@ -64,7 +64,7 @@
             android:text="⚙ 后台管理"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#2C344B"/>
+            android:backgroundTint="#1E2433"/>
 
         <Button
             android:id="@+id/btnReport"
@@ -74,7 +74,7 @@
             android:text="📊 营业报表"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#2C344B"/>
+            android:backgroundTint="#1E2433"/>
 
         <Button
             android:id="@+id/btnLogout"
@@ -82,10 +82,10 @@
             android:layout_height="38dp"
             android:text="交班退出"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#FF3B30"/>
+            android:backgroundTint="#EF4444"/>
     </LinearLayout>
 
-    <!-- 视图1：堂食桌台全景大厅 (默认展示) -->
+    <!-- 视图1：堂食桌台全景大厅 -->
     <LinearLayout
         android:id="@+id/layoutTableOverview"
         android:layout_width="match_parent"
@@ -94,7 +94,6 @@
         android:padding="16dp"
         android:visibility="visible">
 
-        <!-- 状态图例说明 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -110,29 +109,21 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=" 🟢 空闲 (可开台点单)  "
-                android:textColor="#2E7D32"
+                android:text=" 🟢 空闲 (可点单/预定)  "
+                android:textColor="#059669"
                 android:textSize="14sp"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=" 🟠 就餐中 (已挂单/可加菜/结账)  "
-                android:textColor="#E65100"
+                android:text=" 🟠 就餐中 (挂单中/加菜/结账)  "
+                android:textColor="#D97706"
                 android:textSize="14sp"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text=" 🔵 已预定  "
-                android:textColor="#1565C0"
+                android:textColor="#2563EB"
                 android:textSize="14sp"/>
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="end"
-                android:text="💡 提示：点击桌台开台/加菜/结账，长按可预定"
-                android:textColor="#757575"
-                android:textSize="13sp"/>
         </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
@@ -141,7 +132,7 @@
             android:layout_height="match_parent"/>
     </LinearLayout>
 
-    <!-- 视图2：点菜/加菜/结账界面 -->
+    <!-- 视图2：点菜/折扣/结账界面 -->
     <LinearLayout
         android:id="@+id/layoutOrderScreen"
         android:layout_width="match_parent"
@@ -149,7 +140,7 @@
         android:orientation="horizontal"
         android:visibility="gone">
 
-        <!-- 左侧已选菜品与挂单结算栏 (38% 宽度) -->
+        <!-- 左侧购物车与结算 (38% 宽度) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -157,11 +148,10 @@
             android:orientation="vertical"
             android:background="#FFFFFF">
 
-            <!-- 顶部当前桌号与返回 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:background="#F4F5F7"
+                android:background="#F3F4F6"
                 android:gravity="center_vertical"
                 android:paddingHorizontal="12dp">
                 <Button
@@ -170,18 +160,27 @@
                     android:layout_height="34dp"
                     android:text="← 返回桌台"
                     android:textSize="12sp"
-                    android:textColor="#333333"
-                    android:backgroundTint="#E0E0E0"/>
+                    android:textColor="#111827"
+                    android:backgroundTint="#E5E7EB"/>
                 <TextView
                     android:id="@+id/tvOrderTableTitle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
-                    android:text="当前桌台: A01 (未开台)"
+                    android:text="当前桌台: A01"
                     android:textStyle="bold"
-                    android:textColor="#222222"
+                    android:textColor="#111827"
                     android:textSize="15sp"/>
+                <!-- 整单打折/优惠入口 -->
+                <Button
+                    android:id="@+id/btnWholeDiscount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:text="🏷 整单折扣"
+                    android:textSize="12sp"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#8B5CF6"/>
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView
@@ -191,7 +190,7 @@
                 android:layout_weight="1"
                 android:padding="8dp"/>
 
-            <!-- 底部挂单与结账按钮组 -->
+            <!-- 底部金额与打折状态明细 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -202,20 +201,39 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
                     <TextView
                         android:id="@+id/tvTotalCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="共 0 件"
+                        android:textSize="14sp"
+                        android:textColor="#6B7280"/>
+                    <TextView
+                        android:id="@+id/tvDiscountInfo"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="共 0 件"
-                        android:textSize="15sp"/>
+                        android:layout_marginStart="8dp"
+                        android:text=""
+                        android:textSize="12sp"
+                        android:textColor="#8B5CF6"/>
+                    <TextView
+                        android:id="@+id/tvOriginalAmount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:text="￥0.00"
+                        android:textSize="14sp"
+                        android:textColor="#9CA3AF"
+                        android:visibility="gone"/>
                     <TextView
                         android:id="@+id/tvTotalAmount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="￥0.00"
-                        android:textColor="#FF3B30"
+                        android:textColor="#EF4444"
                         android:textSize="26sp"
                         android:textStyle="bold"/>
                 </LinearLayout>
@@ -231,37 +249,35 @@
                         android:layout_height="52dp"
                         android:layout_weight="1"
                         android:text="清空"
-                        android:backgroundTint="#EAECEF"
-                        android:textColor="#333333"/>
-                    <!-- 堂食专属核心：挂单开台/加菜入单 -->
+                        android:backgroundTint="#E5E7EB"
+                        android:textColor="#111827"/>
                     <Button
                         android:id="@+id/btnSaveTableOrder"
                         android:layout_width="0dp"
                         android:layout_height="52dp"
                         android:layout_weight="1.6"
                         android:layout_marginStart="6dp"
-                        android:text="下单开台/加菜"
+                        android:text="下单挂单"
                         android:textStyle="bold"
                         android:textSize="16sp"
-                        android:backgroundTint="#FF9800"
+                        android:backgroundTint="#F59E0B"
                         android:textColor="#FFFFFF"/>
-                    <!-- 直接结账 -->
                     <Button
                         android:id="@+id/btnPay"
                         android:layout_width="0dp"
                         android:layout_height="52dp"
                         android:layout_weight="1.6"
                         android:layout_marginStart="6dp"
-                        android:text="结账清台"
+                        android:text="结账收款"
                         android:textStyle="bold"
                         android:textSize="16sp"
-                        android:backgroundTint="#FFD100"
-                        android:textColor="#222222"/>
+                        android:backgroundTint="#FFC300"
+                        android:textColor="#111827"/>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
-        <!-- 右侧菜品分类与选择矩阵 (62% 宽度) -->
+        <!-- 右侧菜品分类与选择 (62% 宽度) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"

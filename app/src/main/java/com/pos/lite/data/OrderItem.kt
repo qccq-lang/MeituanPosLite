@@ -9,6 +9,8 @@ data class OrderItem(
     val orderId: Long,
     val productId: Long,
     val productName: String,
-    val price: Double,
-    val quantity: Int
+    val originalPrice: Double, // 原单价
+    val price: Double,         // 实收单价
+    val quantity: Int,
+    val discountNote: String = "" // 如: "85折" 或 "-￥5"
 )

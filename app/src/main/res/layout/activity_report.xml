@@ -3,65 +3,184 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="24dp"
-    android:background="#FFFFFF">
+    android:background="#F3F4F6">
 
+    <!-- 顶部导航与时间切换 -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:layout_height="56dp"
+        android:background="#FFFFFF"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:elevation="2dp">
+
         <Button
             android:id="@+id/btnBack"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="返回收银"/>
+            android:layout_height="38dp"
+            android:text="← 返回前台"
+            android:textColor="#111827"
+            android:backgroundTint="#FFC300"/>
+
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="交班对账与营业报表"
-            android:textSize="22sp"
+            android:layout_marginStart="16dp"
+            android:text="📊 门店营业报表与流水分析"
+            android:textSize="18sp"
             android:textStyle="bold"
-            android:gravity="center"/>
+            android:textColor="#111827"/>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>
+
+        <!-- 维度切换：今日 / 本月 / 本年 -->
+        <Button
+            android:id="@+id/btnFilterToday"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:text="今日"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#1E2433"/>
+
+        <Button
+            android:id="@+id/btnFilterMonth"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginStart="8dp"
+            android:text="本月"
+            android:textColor="#111827"
+            android:backgroundTint="#E5E7EB"/>
+
+        <Button
+            android:id="@+id/btnFilterYear"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginStart="8dp"
+            android:text="本年"
+            android:textColor="#111827"
+            android:backgroundTint="#E5E7EB"/>
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/tvReportDate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:textSize="16sp"/>
-
-    <TextView
-        android:id="@+id/tvTotalOrders"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textSize="18sp"/>
-
-    <TextView
-        android:id="@+id/tvTotalSales"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#FF3B30"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="各渠道明细："
-        android:textSize="16sp"
-        android:textStyle="bold"/>
-
-    <TextView
-        android:id="@+id/tvPaySummary"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textSize="16sp"
-        android:lineSpacingExtra="4dp"/>
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <!-- 左侧：多维统计与分析卡片 (35% 宽度) -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="3.5"
+            android:orientation="vertical"
+            android:background="#FFFFFF"
+            android:padding="16dp"
+            android:elevation="2dp">
+
+            <TextView
+                android:id="@+id/tvReportPeriod"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="统计周期: 今日"
+                android:textSize="14sp"
+                android:textColor="#6B7280"/>
+
+            <TextView
+                android:id="@+id/tvTotalSales"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="￥0.00"
+                android:textSize="32sp"
+                android:textStyle="bold"
+                android:textColor="#EF4444"/>
+
+            <TextView
+                android:id="@+id/tvOriginalAndDiscount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="原价总计: ￥0.00 | 优惠让利: ￥0.00"
+                android:textSize="12sp"
+                android:textColor="#9CA3AF"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#E5E7EB"
+                android:layout_marginVertical="12dp"/>
+
+            <!-- 经营指标 -->
+            <TextView
+                android:id="@+id/tvOrderCountAndAvg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="有效订单: 0 笔 | 客单价: ￥0.00"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#111827"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#E5E7EB"
+                android:layout_marginVertical="12dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="渠道与场景分布："
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="#111827"/>
+
+            <TextView
+                android:id="@+id/tvTypeDistribution"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="堂食桌台: 0 笔 (￥0.00)\n快餐外带: 0 笔 (￥0.00)"
+                android:lineSpacingExtra="4dp"
+                android:textSize="13sp"
+                android:textColor="#4B5563"/>
+
+            <TextView
+                android:id="@+id/tvPayDistribution"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="支付方式明细..."
+                android:lineSpacingExtra="4dp"
+                android:textSize="13sp"
+                android:textColor="#4B5563"/>
+        </LinearLayout>
+
+        <!-- 右侧：流水订单明细列表 (65% 宽度) -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="6.5"
+            android:layout_marginStart="16dp"
+            android:orientation="vertical"
+            android:background="#FFFFFF"
+            android:padding="16dp"
+            android:elevation="2dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="单据流水列表 (点击单据查看小票与菜品明细)"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#111827"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvOrderHistory"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="12dp"/>
+        </LinearLayout>
+    </LinearLayout>
 </LinearLayout>

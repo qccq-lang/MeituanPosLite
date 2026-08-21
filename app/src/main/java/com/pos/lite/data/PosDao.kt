@@ -5,8 +5,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PosDao {
-    // 员工
-    @Query("SELECT * FROM staffs")
+    // 员工管理
+    @Query("SELECT * FROM staffs ORDER BY id ASC")
     fun getAllStaffs(): Flow<List<Staff>>
 
     @Query("SELECT * FROM staffs WHERE pinCode = :pin LIMIT 1")
@@ -15,7 +15,13 @@ interface PosDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStaff(staff: Staff): Long
 
-    // 桌台
+    @Update
+    suspend fun updateStaff(staff: Staff)
+
+    @Query("DELETE FROM staffs WHERE id = :id")
+    suspend fun deleteStaffById(id: Long)
+
+    // 桌台管理
     @Query("SELECT * FROM dining_tables ORDER BY id ASC")
     fun getAllTables(): Flow<List<DiningTable>>
 
@@ -28,24 +34,39 @@ interface PosDao {
     @Update
     suspend fun updateTable(table: DiningTable)
 
-    // 分类
+    @Query("DELETE FROM dining_tables WHERE id = :id")
+    suspend fun deleteTableById(id: Long)
+
+    // 分类管理
     @Query("SELECT * FROM categories ORDER BY sortOrder ASC, id ASC")
     fun getAllCategories(): Flow<List<Category>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCategory(category: Category): Long
 
-    // 商品/菜品
-    @Query("SELECT * FROM products")
+    @Update
+    suspend fun updateCategory(category: Category)
+
+    @Query("DELETE FROM categories WHERE id = :id")
+    suspend fun deleteCategoryById(id: Long)
+
+    // 菜品管理
+    @Query("SELECT * FROM products ORDER BY id DESC")
     fun getAllProducts(): Flow<List<Product>>
 
-    @Query("SELECT * FROM products WHERE categoryId = :catId")
+    @Query("SELECT * FROM products WHERE categoryId = :catId ORDER BY id DESC")
     fun getProductsByCategory(catId: Long): Flow<List<Product>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertProduct(product: Product): Long
 
-    // 订单与挂单明细
+    @Update
+    suspend fun updateProduct(product: Product)
+
+    @Query("DELETE FROM products WHERE id = :id")
+    suspend fun deleteProductById(id: Long)
+
+    // 订单与流水
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrder(order: Order): Long
 
@@ -64,9 +85,7 @@ interface PosDao {
     @Query("SELECT * FROM order_items WHERE orderId = :orderId")
     suspend fun getOrderItems(orderId: Long): List<OrderItem>
 
-    @Query("SELECT * FROM orders WHERE timestamp BETWEEN :start AND :end ORDER BY timestamp DESC")
-    suspend fun getOrdersByDateRange(start: Long, end: Long): List<Order>
-
-    @Query("SELECT SUM(totalAmount) FROM orders WHERE status = 'PAID' AND timestamp BETWEEN :start AND :end")
-    suspend fun getTotalSales(start: Long, end: Long): Double?
+    // 报表查询
+    @Query("SELECT * FROM orders WHERE status = 'PAID' AND timestamp BETWEEN :start AND :end ORDER BY timestamp DESC")
+    suspend fun getPaidOrdersByRange(start: Long, end: Long): List<Order>
 }

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:background="#FFFFFF">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvRowTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="名称标题"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#111827"/>
+
+            <TextView
+                android:id="@+id/tvRowSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="单价/分类/备注信息"
+                android:textSize="13sp"
+                android:textColor="#6B7280"/>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnRowEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="编辑"
+            android:textSize="13sp"
+            android:textColor="#1E2433"
+            android:backgroundTint="#E5E7EB"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/btnRowDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="删除"
+            android:textSize="13sp"
+            android:textColor="#EF4444"
+            android:backgroundTint="#FEE2E2"/>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

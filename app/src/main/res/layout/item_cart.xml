@@ -1,48 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="48dp"
-    android:orientation="horizontal"
-    android:gravity="center_vertical">
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingVertical="8dp"
+    android:paddingHorizontal="4dp">
 
-    <TextView
-        android:id="@+id/tvCartItemName"
-        android:layout_width="0dp"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="菜品"
-        android:textSize="15sp"/>
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
+        <!-- 菜品名称 -->
+        <TextView
+            android:id="@+id/tvCartItemName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="菜品名称"
+            android:textSize="15sp"
+            android:textColor="#111827"
+            android:textStyle="bold"/>
+
+        <!-- 单品打折按钮 -->
+        <TextView
+            android:id="@+id/tvItemDiscountBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="[折/减]"
+            android:textSize="12sp"
+            android:textColor="#8B5CF6"
+            android:padding="4dp"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <!-- 金额 -->
+        <TextView
+            android:id="@+id/tvCartItemPrice"
+            android:layout_width="75dp"
+            android:layout_height="wrap_content"
+            android:text="￥0.00"
+            android:textSize="15sp"
+            android:textColor="#EF4444"
+            android:gravity="end"
+            android:layout_marginEnd="8dp"/>
+
+        <!-- 数量减 -->
+        <Button
+            android:id="@+id/btnMinus"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:text="-"
+            android:textSize="16sp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:padding="0dp"/>
+
+        <TextView
+            android:id="@+id/tvCartItemCount"
+            android:layout_width="28dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="1"
+            android:textSize="15sp"
+            android:textStyle="bold"/>
+
+        <!-- 数量加 -->
+        <Button
+            android:id="@+id/btnPlus"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:text="+"
+            android:textSize="16sp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:padding="0dp"/>
+    </LinearLayout>
+
+    <!-- 单品折扣标记展示 -->
     <TextView
-        android:id="@+id/tvCartItemPrice"
-        android:layout_width="65dp"
+        android:id="@+id/tvItemDiscountNote"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="￥0.00"
-        android:textSize="14sp"/>
-
-    <Button
-        android:id="@+id/btnMinus"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:text="-"
-        android:insetTop="0dp"
-        android:insetBottom="0dp"
-        android:padding="0dp"/>
-
-    <TextView
-        android:id="@+id/tvCartItemCount"
-        android:layout_width="30dp"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="1"
-        android:textSize="14sp"/>
-
-    <Button
-        android:id="@+id/btnPlus"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:text="+"
-        android:insetTop="0dp"
-        android:insetBottom="0dp"
-        android:padding="0dp"/>
+        android:text="单品优惠: 85折"
+        android:textSize="11sp"
+        android:textColor="#8B5CF6"
+        android:visibility="gone"/>
 </LinearLayout>

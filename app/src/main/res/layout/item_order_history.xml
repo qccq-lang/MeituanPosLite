@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:gravity="center_vertical"
+    android:background="?android:attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/tvOrderTable"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="A01桌"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#111827"/>
+            <TextView
+                android:id="@+id/tvOrderPayType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="[微信支付]"
+                android:textSize="13sp"
+                android:textColor="#059669"/>
+            <TextView
+                android:id="@+id/tvOrderDiscountBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="全单9折"
+                android:textSize="11sp"
+                android:textColor="#8B5CF6"
+                android:visibility="gone"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvOrderNoAndTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="单号: 20260821001 | 2026-08-21 12:30 | 收银员: 张三"
+            android:textSize="12sp"
+            android:textColor="#9CA3AF"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvOrderAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="￥88.00"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#EF4444"/>
+</LinearLayout>
