@@ -164,6 +164,7 @@ class ManageActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (LicenseGuard.verifyOrHalt(this)) return
         binding = ActivityManageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -242,6 +243,7 @@ class ManageActivity : AppCompatActivity() {
     private fun loadListData() {
         lifecycleScope.launch(Dispatchers.IO) {
             val dao = App.instance.database.posDao()
+            dao.removeDuplicateAdmins()
             when (currentTab) {
                 "PRODUCTS" -> {
                     val products = dao.getAllProducts().first()

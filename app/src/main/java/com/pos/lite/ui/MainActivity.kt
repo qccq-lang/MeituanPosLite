@@ -75,6 +75,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (LicenseGuard.verifyOrHalt(this)) return
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -82,6 +83,12 @@ class MainActivity : AppCompatActivity() {
         observeTables()
         observeCategories()
         observeProducts()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // 埋点 3：从后台切回前台时校验
+        if (LicenseGuard.verifyOrHalt(this)) return
     }
 
     private fun setupUI() {
@@ -559,6 +566,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun completeOrderAndClearTable(payType: String, totalAmount: Double, originalAmount: Double) {
+        if (LicenseGuard.verifyOrHalt(this)) return
+        
         val table = activeTable
         val tableName = table?.name ?: "快餐"
         val discountAmount = Math.max(0.0, originalAmount - totalAmount)

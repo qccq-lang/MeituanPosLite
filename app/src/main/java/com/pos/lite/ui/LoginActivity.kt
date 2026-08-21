@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import com.pos.lite.App
 import com.pos.lite.R
 import com.pos.lite.data.Staff
+import com.pos.lite.utils.LicenseGuard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -23,14 +24,15 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
+        // 埋点 2-A：登录界面启动强校验
+        if (LicenseGuard.verifyOrHalt(this)) return
 
+        setContentView(R.layout.activity_login)
         tvPinDisplay = findViewById(R.id.tvPinDisplay)
         setupPinKeypad()
     }
 
     private fun setupPinKeypad() {
-        // 显式数字配置：彻底杜绝主题样式将字符变白
         val keyConfig = listOf(
             R.id.btn1 to "1", R.id.btn2 to "2", R.id.btn3 to "3",
             R.id.btn4 to "4", R.id.btn5 to "5", R.id.btn6 to "6",
@@ -42,9 +44,9 @@ class LoginActivity : AppCompatActivity() {
             val tv = findViewById<TextView>(id)
             tv.text = textVal
             if (id == R.id.btnClear) {
-                tv.setTextColor(Color.parseColor("#EF4444")) // 红色清空
+                tv.setTextColor(Color.parseColor("#EF4444"))
             } else {
-                tv.setTextColor(Color.parseColor("#111827")) // 纯黑高对比度
+                tv.setTextColor(Color.parseColor("#111827"))
             }
 
             tv.setOnClickListener {
@@ -115,12 +117,16 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun performLogin(pin: String) {
+        // 埋点 2-B：登录提交验证强校验
+        if (LicenseGuard.verifyOrHalt(this)) return
+
         lifecycleScope.launch(Dispatchers.IO) {
             val dao = App.instance.database.posDao()
+            dao.removeDuplicateAdmins() // 自动去除多余店长
             var staff = dao.loginWithPin(pin)
 
             if (staff == null) {
-                if (pin == "888888") {
+                if (pin == "888888" && dao.getAdminCount() == 0) {
                     staff = Staff(name = "店长", pinCode = "888888", role = "ADMIN")
                     dao.insertStaff(staff)
                 } else if (pin == "1234") {
@@ -132,7 +138,7 @@ class LoginActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 if (staff != null) {
                     App.currentStaff = staff
-                    Toast.makeText(this@LoginActivity, "欢迎: ${staff.name}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@LoginActivity, "欢迎使用六猫餐饮: ${staff.name}", Toast.LENGTH_SHORT).show()
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                     finish()
                 } else {

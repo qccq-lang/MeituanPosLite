@@ -17,9 +17,9 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="美团收银 (青春版)"
+            android:text="六猫餐饮"
             android:textColor="#FFC300"
-            android:textSize="36sp"
+            android:textSize="38sp"
             android:textStyle="bold" />
 
         <TextView
@@ -34,7 +34,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
-            android:text="初始账号密码：\n店长 PIN: 888888\n收银员 PIN: 1234\n(支持屏幕触控与物理键盘输入)"
+            android:text="初始账号密码：\n店长 PIN: 888888\n收银员 PIN: 1234"
             android:textColor="#6B7280"
             android:textSize="15sp"
             android:gravity="center"

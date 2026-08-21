@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 金黄色圆角底座 -->
+    <path
+        android:fillColor="#FFC300"
+        android:pathData="M16,0 L92,0 A16,16 0 0 1 108,16 L108,92 A16,16 0 0 1 92,108 L16,108 A16,16 0 0 1 0,92 L0,16 A16,16 0 0 1 16,0 Z" />
+    <!-- 深色六猫餐饮猫咪大厨剪影 -->
+    <path
+        android:fillColor="#1E2433"
+        android:pathData="M34,42 L42,26 L50,38 L58,38 L66,26 L74,42 C78,48 80,56 80,64 C80,78 68,88 54,88 C40,88 28,78 28,64 C28,56 30,48 34,42 Z" />
+    <!-- 猫咪眼睛 -->
+    <path
+        android:fillColor="#FFC300"
+        android:pathData="M42,58 A4,4 0 1 1 42,50 A4,4 0 1 1 42,58 Z" />
+    <path
+        android:fillColor="#FFC300"
+        android:pathData="M66,58 A4,4 0 1 1 66,50 A4,4 0 1 1 66,58 Z" />
+    <!-- 猫咪鼻子 -->
+    <path
+        android:fillColor="#FFC300"
+        android:pathData="M54,64 L50,68 L58,68 Z" />
+</vector>

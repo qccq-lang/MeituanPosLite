@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PosDao {
-    // 员工
+    // 员工 (自动去重)
     @Query("SELECT * FROM staffs ORDER BY role DESC, id ASC")
     fun getAllStaffs(): Flow<List<Staff>>
 
@@ -14,6 +14,10 @@ interface PosDao {
 
     @Query("SELECT COUNT(*) FROM staffs WHERE role = 'ADMIN'")
     suspend fun getAdminCount(): Int
+
+    // 清除多余的重复店长，仅保留第一个
+    @Query("DELETE FROM staffs WHERE role = 'ADMIN' AND id NOT IN (SELECT MIN(id) FROM staffs WHERE role = 'ADMIN')")
+    suspend fun removeDuplicateAdmins()
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStaff(staff: Staff): Long
@@ -69,7 +73,7 @@ interface PosDao {
     @Query("DELETE FROM products WHERE id = :id")
     suspend fun deleteProductById(id: Long)
 
-    // 快捷折扣配置
+    // 折扣配置
     @Query("SELECT * FROM discount_configs ORDER BY sortOrder ASC, id ASC")
     fun getAllDiscountConfigs(): Flow<List<DiscountConfig>>
 
@@ -85,7 +89,7 @@ interface PosDao {
     @Query("DELETE FROM discount_configs WHERE id = :id")
     suspend fun deleteDiscountConfigById(id: Long)
 
-    // 订单与流水
+    // 订单
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrder(order: Order): Long
 
