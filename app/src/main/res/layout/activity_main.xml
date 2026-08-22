@@ -5,13 +5,13 @@
     android:orientation="vertical"
     android:background="#F0F2F5">
 
-    <!-- 顶部黄色导航栏 -->
+    <!-- 1. 顶部黄色导航栏 (精简紧凑为 48dp) -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="48dp"
         android:background="#FFC300"
         android:gravity="center_vertical"
-        android:paddingHorizontal="16dp">
+        android:paddingHorizontal="14dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -19,29 +19,34 @@
             android:text="六猫餐饮"
             android:textStyle="bold"
             android:textColor="#111827"
-            android:textSize="20sp"/>
+            android:textSize="18sp"/>
 
+        <!-- 模式切换按钮 -->
         <Button
             android:id="@+id/btnNavTables"
             android:layout_width="wrap_content"
-            android:layout_height="38dp"
-            android:layout_marginStart="24dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="16dp"
             android:text="🪑 堂食桌台"
             android:textStyle="bold"
-            android:textSize="14sp"
+            android:textSize="13sp"
             android:insetTop="0dp"
-            android:insetBottom="0dp"/>
+            android:insetBottom="0dp"
+            android:paddingHorizontal="12dp"
+            android:singleLine="true"/>
 
         <Button
             android:id="@+id/btnNavFastFood"
             android:layout_width="wrap_content"
-            android:layout_height="38dp"
-            android:layout_marginStart="8dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="6dp"
             android:text="⚡ 快餐收银"
             android:textStyle="bold"
-            android:textSize="14sp"
+            android:textSize="13sp"
             android:insetTop="0dp"
-            android:insetBottom="0dp"/>
+            android:insetBottom="0dp"
+            android:paddingHorizontal="12dp"
+            android:singleLine="true"/>
 
         <View
             android:layout_width="0dp"
@@ -52,46 +57,56 @@
             android:id="@+id/tvCashierInfo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="12dp"
             android:text="员工: 店长"
             android:textColor="#111827"
-            android:textSize="15sp"
-            android:textStyle="bold"/>
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:singleLine="true"/>
 
         <Button
             android:id="@+id/btnManage"
             android:layout_width="wrap_content"
-            android:layout_height="38dp"
-            android:layout_marginEnd="8dp"
-            android:text="⚙ 后台管理"
+            android:layout_height="34dp"
+            android:layout_marginEnd="6dp"
+            android:text="⚙ 管理"
             android:textStyle="bold"
+            android:textSize="13sp"
             android:textColor="#FFFFFF"
             android:backgroundTint="#1E2433"
             android:insetTop="0dp"
-            android:insetBottom="0dp"/>
+            android:insetBottom="0dp"
+            android:paddingHorizontal="10dp"
+            android:singleLine="true"/>
 
         <Button
             android:id="@+id/btnReport"
             android:layout_width="wrap_content"
-            android:layout_height="38dp"
-            android:layout_marginEnd="8dp"
-            android:text="📊 营业报表"
+            android:layout_height="34dp"
+            android:layout_marginEnd="6dp"
+            android:text="📊 报表"
             android:textStyle="bold"
+            android:textSize="13sp"
             android:textColor="#FFFFFF"
             android:backgroundTint="#1E2433"
             android:insetTop="0dp"
-            android:insetBottom="0dp"/>
+            android:insetBottom="0dp"
+            android:paddingHorizontal="10dp"
+            android:singleLine="true"/>
 
         <Button
             android:id="@+id/btnLogout"
             android:layout_width="wrap_content"
-            android:layout_height="38dp"
+            android:layout_height="34dp"
             android:text="交班退出"
             android:textStyle="bold"
+            android:textSize="13sp"
             android:textColor="#FFFFFF"
             android:backgroundTint="#EF4444"
             android:insetTop="0dp"
-            android:insetBottom="0dp"/>
+            android:insetBottom="0dp"
+            android:paddingHorizontal="10dp"
+            android:singleLine="true"/>
     </LinearLayout>
 
     <!-- 视图1：堂食桌台全景大厅 -->
@@ -100,7 +115,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="16dp"
+        android:padding="12dp"
         android:visibility="visible">
 
         <LinearLayout
@@ -108,31 +123,31 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingBottom="12dp">
+            android:paddingBottom="8dp">
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="桌台状态："
+                android:text="桌台："
                 android:textStyle="bold"
-                android:textSize="16sp"/>
+                android:textSize="14sp"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=" 🟢 空闲 (可点单/预定)  "
+                android:text=" 🟢 空闲  "
                 android:textColor="#059669"
-                android:textSize="14sp"/>
+                android:textSize="13sp"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=" 🟠 就餐中 (挂单中/加菜/结账)  "
+                android:text=" 🟠 就餐中  "
                 android:textColor="#D97706"
-                android:textSize="14sp"/>
+                android:textSize="13sp"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=" 🔵 已预定 (支持提前预点菜)  "
+                android:text=" 🔵 预定 "
                 android:textColor="#2563EB"
-                android:textSize="14sp"/>
+                android:textSize="13sp"/>
         </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
@@ -149,50 +164,60 @@
         android:orientation="horizontal"
         android:visibility="gone">
 
-        <!-- 左侧购物车与结算 (38% 宽度) -->
+        <!-- 左侧购物车与结算 (34% 宽度，给右侧菜品留出更多空间) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="3.8"
+            android:layout_weight="3.4"
             android:orientation="vertical"
             android:background="#FFFFFF">
 
+            <!-- 顶部标题栏：精简排版，彻底消除换行 -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="40dp"
                 android:background="#F3F4F6"
                 android:gravity="center_vertical"
-                android:paddingHorizontal="12dp">
+                android:paddingHorizontal="8dp">
+
                 <Button
                     android:id="@+id/btnBackToTables"
                     android:layout_width="wrap_content"
-                    android:layout_height="34dp"
-                    android:text="← 返回桌台"
-                    android:textSize="12sp"
+                    android:layout_height="28dp"
+                    android:text="← 桌台"
+                    android:textSize="11sp"
                     android:textColor="#111827"
                     android:backgroundTint="#E5E7EB"
                     android:insetTop="0dp"
-                    android:insetBottom="0dp"/>
+                    android:insetBottom="0dp"
+                    android:paddingHorizontal="8dp"
+                    android:singleLine="true"/>
+
                 <TextView
                     android:id="@+id/tvOrderTableTitle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="8dp"
-                    android:text="当前桌台: A01"
+                    android:layout_marginHorizontal="6dp"
+                    android:text="A01桌"
                     android:textStyle="bold"
                     android:textColor="#111827"
-                    android:textSize="15sp"/>
+                    android:textSize="13sp"
+                    android:singleLine="true"
+                    android:ellipsize="end"/>
+
                 <Button
                     android:id="@+id/btnWholeDiscount"
                     android:layout_width="wrap_content"
-                    android:layout_height="34dp"
-                    android:text="🏷 整单折扣"
-                    android:textSize="12sp"
+                    android:layout_height="28dp"
+                    android:text="🏷 折扣"
+                    android:textSize="11sp"
                     android:textColor="#FFFFFF"
                     android:backgroundTint="#8B5CF6"
                     android:insetTop="0dp"
-                    android:insetBottom="0dp"/>
+                    android:insetBottom="0dp"
+                    android:paddingHorizontal="8dp"
+                    android:singleLine="true"/>
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView
@@ -200,155 +225,178 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:padding="8dp"/>
+                android:padding="6dp"/>
 
-            <!-- 底部金额明细与独立抹零 -->
+            <!-- 底部结算栏 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="12dp"
+                android:padding="10dp"
                 android:background="#FAFAFA">
 
-                <!-- 独立自动抹零复选框 (不与任何折扣冲突) -->
+                <!-- 自动抹零与让利说明 -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingBottom="4dp">
+                    android:paddingBottom="2dp">
+
                     <CheckBox
                         android:id="@+id/cbAutoMoling"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="自动抹零 (去除角分零头)"
-                        android:textSize="13sp"
+                        android:text="自动抹零 (去角分)"
+                        android:textSize="12sp"
                         android:textColor="#374151"
-                        android:textStyle="bold"/>
+                        android:textStyle="bold"
+                        android:singleLine="true"/>
+
                     <View
                         android:layout_width="0dp"
                         android:layout_height="1dp"
                         android:layout_weight="1"/>
+
                     <TextView
                         android:id="@+id/tvDiscountInfo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text=""
-                        android:textSize="12sp"
-                        android:textColor="#8B5CF6"/>
+                        android:textSize="11sp"
+                        android:textColor="#8B5CF6"
+                        android:singleLine="true"/>
                 </LinearLayout>
 
+                <!-- 金额显示 -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
+
                     <TextView
                         android:id="@+id/tvTotalCount"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="共 0 件"
-                        android:textSize="14sp"
-                        android:textColor="#6B7280"/>
+                        android:textSize="13sp"
+                        android:textColor="#6B7280"
+                        android:singleLine="true"/>
+
                     <TextView
                         android:id="@+id/tvOriginalAmount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="6dp"
+                        android:layout_marginEnd="4dp"
                         android:text="￥0.00"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:textColor="#9CA3AF"
-                        android:visibility="gone"/>
+                        android:visibility="gone"
+                        android:singleLine="true"/>
+
                     <TextView
                         android:id="@+id/tvTotalAmount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="￥0.00"
                         android:textColor="#EF4444"
-                        android:textSize="26sp"
-                        android:textStyle="bold"/>
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:singleLine="true"/>
                 </LinearLayout>
 
+                <!-- 底部操作按钮：高度优化为 42dp，绝不换行 -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="42dp"
                     android:orientation="horizontal"
-                    android:layout_marginTop="8dp">
+                    android:layout_marginTop="6dp">
+
                     <Button
                         android:id="@+id/btnClearCart"
                         android:layout_width="0dp"
-                        android:layout_height="52dp"
+                        android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:text="清空"
+                        android:textSize="13sp"
                         android:backgroundTint="#E5E7EB"
                         android:textColor="#111827"
                         android:insetTop="0dp"
-                        android:insetBottom="0dp"/>
+                        android:insetBottom="0dp"
+                        android:padding="0dp"
+                        android:singleLine="true"/>
+
                     <Button
                         android:id="@+id/btnSaveTableOrder"
                         android:layout_width="0dp"
-                        android:layout_height="52dp"
-                        android:layout_weight="1.6"
-                        android:layout_marginStart="6dp"
-                        android:text="下单挂单"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1.5"
+                        android:layout_marginStart="4dp"
+                        android:text="下单"
                         android:textStyle="bold"
-                        android:textSize="16sp"
+                        android:textSize="14sp"
                         android:backgroundTint="#F59E0B"
                         android:textColor="#FFFFFF"
                         android:insetTop="0dp"
-                        android:insetBottom="0dp"/>
+                        android:insetBottom="0dp"
+                        android:padding="0dp"
+                        android:singleLine="true"/>
+
                     <Button
                         android:id="@+id/btnPay"
                         android:layout_width="0dp"
-                        android:layout_height="52dp"
-                        android:layout_weight="1.6"
-                        android:layout_marginStart="6dp"
-                        android:text="结账收款"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1.5"
+                        android:layout_marginStart="4dp"
+                        android:text="结账"
                         android:textStyle="bold"
-                        android:textSize="16sp"
+                        android:textSize="14sp"
                         android:backgroundTint="#FFC300"
                         android:textColor="#111827"
                         android:insetTop="0dp"
-                        android:insetBottom="0dp"/>
+                        android:insetBottom="0dp"
+                        android:padding="0dp"
+                        android:singleLine="true"/>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
-        <!-- 右侧菜品分类、拼音搜索与菜品矩阵 (62% 宽度) -->
+        <!-- 右侧菜品分类、拼音搜索与菜品矩阵 (66% 宽度) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="6.2"
+            android:layout_weight="6.6"
             android:orientation="vertical"
-            android:padding="10dp">
+            android:padding="8dp">
 
-            <!-- 搜索框 -->
+            <!-- 搜索框 (高度 38dp) -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="44dp"
+                android:layout_height="38dp"
                 android:background="#FFFFFF"
                 android:gravity="center_vertical"
-                android:paddingHorizontal="12dp"
+                android:paddingHorizontal="10dp"
                 android:elevation="1dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🔍"
-                    android:textSize="16sp"/>
+                    android:textSize="14sp"/>
 
                 <EditText
                     android:id="@+id/etSearchDish"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="6dp"
                     android:background="@null"
-                    android:hint="输入菜名或拼音首字母 (例如: hmj 搜黄焖鸡)"
+                    android:hint="输入菜名或首字母 (如: hmj 搜黄焖鸡)"
                     android:textColor="#111827"
                     android:textColorHint="#9CA3AF"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     android:singleLine="true"/>
 
                 <TextView
@@ -356,24 +404,26 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="✕"
-                    android:textSize="16sp"
+                    android:textSize="14sp"
                     android:textColor="#9CA3AF"
-                    android:padding="6dp"
+                    android:padding="4dp"
                     android:visibility="gone"/>
             </LinearLayout>
 
+            <!-- 水平胶囊分类条 (高度 34dp) -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvCategories"
                 android:layout_width="match_parent"
-                android:layout_height="42dp"
-                android:layout_marginTop="8dp"/>
+                android:layout_height="34dp"
+                android:layout_marginTop="6dp"/>
 
+            <!-- 菜品卡片网格 -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvProducts"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:layout_marginTop="6dp"/>
+                android:layout_marginTop="4dp"/>
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

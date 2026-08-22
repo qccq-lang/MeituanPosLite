@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/layoutCategoryRoot"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardCategoryRoot"
     android:layout_width="wrap_content"
-    android:layout_height="40dp"
-    android:layout_marginEnd="10dp"
-    android:gravity="center"
-    android:paddingHorizontal="16dp"
-    android:background="#FFFFFF"
-    android:clickable="true"
-    android:focusable="true">
+    android:layout_height="32dp"
+    android:layout_marginEnd="8dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="1dp"
+    app:cardBackgroundColor="#FFFFFF">
 
     <TextView
         android:id="@+id/tvCategoryName"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="分类"
-        android:textSize="14sp"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:paddingHorizontal="14dp"
+        android:text="分类名称"
+        android:textSize="13sp"
         android:textStyle="bold"
-        android:textColor="#374151"/>
-</LinearLayout>
+        android:textColor="#374151"
+        android:singleLine="true"
+        android:includeFontPadding="false"/>
+</androidx.cardview.widget.CardView>

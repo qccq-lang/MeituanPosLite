@@ -211,7 +211,7 @@ class MainActivity : AppCompatActivity() {
         resetWholeDiscount()
         updateCartSummary()
         updateNavModeButtons(isTableMode = false)
-        binding.tvOrderTableTitle.text = "模式: ⚡ 快餐直接收银"
+        binding.tvOrderTableTitle.text = "⚡ 快餐直接收银"
         binding.btnSaveTableOrder.visibility = View.GONE
         binding.layoutTableOverview.visibility = View.GONE
         binding.layoutOrderScreen.visibility = View.VISIBLE
@@ -413,9 +413,10 @@ class MainActivity : AppCompatActivity() {
         cartList.clear()
         resetWholeDiscount()
         updateCartSummary()
-        binding.tvOrderTableTitle.text = "桌台: ${table.name} (${table.area})"
+        // 精炼标题
+        binding.tvOrderTableTitle.text = "【开台】${table.name} (${table.area})"
         binding.btnSaveTableOrder.visibility = View.VISIBLE
-        binding.btnSaveTableOrder.text = "下单开台"
+        binding.btnSaveTableOrder.text = "下单"
         binding.layoutTableOverview.visibility = View.GONE
         binding.layoutOrderScreen.visibility = View.VISIBLE
     }
@@ -427,9 +428,10 @@ class MainActivity : AppCompatActivity() {
         cartList.clear()
         resetWholeDiscount()
         updateCartSummary()
-        binding.tvOrderTableTitle.text = "【预定提前点菜】桌台: ${table.name}"
+        // 精炼标题：从长句改为短标题
+        binding.tvOrderTableTitle.text = "【预点】${table.name}"
         binding.btnSaveTableOrder.visibility = View.VISIBLE
-        binding.btnSaveTableOrder.text = "保存预定菜单"
+        binding.btnSaveTableOrder.text = "保存预定"
         binding.layoutTableOverview.visibility = View.GONE
         binding.layoutOrderScreen.visibility = View.VISIBLE
     }
@@ -453,10 +455,10 @@ class MainActivity : AppCompatActivity() {
                     cartList.add(CartItemModel(p, item.quantity, discountRate = discountRate, discountNote = item.discountNote))
                 }
                 updateCartSummary()
-                val statusText = if (isFromReservation) "预定预点·已选${cartList.sumOf { it.count }}件" else "就餐中·已点${cartList.sumOf { it.count }}件"
-                binding.tvOrderTableTitle.text = "桌台: ${table.name} ($statusText)"
+                val statusTag = if (isFromReservation) "预点" else "就餐中"
+                binding.tvOrderTableTitle.text = "【$statusTag】${table.name}"
                 binding.btnSaveTableOrder.visibility = View.VISIBLE
-                binding.btnSaveTableOrder.text = if (isFromReservation) "更新预定菜单" else "加菜入单"
+                binding.btnSaveTableOrder.text = if (isFromReservation) "保存预定" else "加菜"
                 binding.layoutTableOverview.visibility = View.GONE
                 binding.layoutOrderScreen.visibility = View.VISIBLE
                 onLoaded?.invoke()
@@ -854,7 +856,7 @@ class MainActivity : AppCompatActivity() {
 
     inner class CategoryTabAdapter(private val list: List<Category>) : RecyclerView.Adapter<CategoryTabAdapter.VH>() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
-            val root: View = v.findViewById(R.id.layoutCategoryRoot)
+            val card: androidx.cardview.widget.CardView = v.findViewById(R.id.cardCategoryRoot)
             val tvName: TextView = v.findViewById(R.id.tvCategoryName)
         }
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
@@ -866,14 +868,14 @@ class MainActivity : AppCompatActivity() {
             val isSelected = (item.id == selectedCategoryId)
 
             if (isSelected) {
-                holder.root.setBackgroundColor(Color.parseColor("#FFC300"))
+                holder.card.setCardBackgroundColor(Color.parseColor("#FFC300"))
                 holder.tvName.setTextColor(Color.parseColor("#111827"))
             } else {
-                holder.root.setBackgroundColor(Color.parseColor("#FFFFFF"))
+                holder.card.setCardBackgroundColor(Color.parseColor("#FFFFFF"))
                 holder.tvName.setTextColor(Color.parseColor("#4B5563"))
             }
 
-            holder.root.setOnClickListener {
+            holder.card.setOnClickListener {
                 selectedCategoryId = item.id
                 notifyDataSetChanged()
                 applyProductFilter()
